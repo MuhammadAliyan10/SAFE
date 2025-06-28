@@ -1,0 +1,328 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Currency {
+  PKR
+  USD
+  INR
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+}
+
+enum TaxType {
+  FBR
+  NONE
+}
+
+enum NotificationType {
+  EMAIL
+  WHATSAPP
+  PUSH
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  OVERDUE
+}
+
+enum DocumentType {
+  ID_CARD
+  CONTRACT
+  LICENSE
+  OTHER
+}
+
+
+enum PaymentMethodType {
+  JAZZCASH
+  EASYPAISA
+  SADAPAY
+  STRIPE
+  PAYPAL
+  WISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+enum Role {
+  FREELANCER
+  SMALL_BUSINESS
+}
+
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+  PENDING
+  REFUNDED
+}
+
+enum ThreatType {
+  PHISHING
+  MALWARE
+  DDoS
+  RANSOMWARE
+  DATA_LEAK
+}
+
+model User {
+  id             String            @id @default(uuid())
+  email          String            @unique // Login email
+  workingEmail   String?           @unique // Email for services (Gmail, Outlook)
+  username       String            @unique
+  password       String
+  profileImage   String?           // Cloud storage URL for profile image
+  googleId       String?           @unique
+  twoFactor      Boolean           @default(false)
+  twoFactorType  String?           // Email or SMS
+  role           Role              @default(FREELANCER)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  clients        Client[]
+  invoices       Invoice[]
+  expenses       Expense[]
+  sessions       Session[]
+  taxes          Tax[]
+  notifications  Notification[]
+  subscriptions  Subscription[]
+  documents      Document[]
+  backups        Backup[]
+  auditLogs      AuditLog[]
+  emailSettings  EmailSetting[]
+  paymentMethods PaymentMethod[]
+  apiKeys        ApiKey[]
+  storefronts    Storefront[]
+  paymentHistory PaymentHistory[]
+  threatLogs     ThreatLog[]
+  cashFlow       CashFlow[]
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("sessions")
+}
+
+model Client {
+  id             String            @id @default(uuid())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  email          String
+  phone          String?
+  status         ClientStatus      @default(ACTIVE)
+  projectHistory Json?             // Store project details as JSON
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  invoices       Invoice[]
+}
+
+model Invoice {
+  id             String            @id @default(uuid())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  invoiceNumber  String            @unique
+  amount         Float
+  currency       Currency          @default(PKR)
+  status         InvoiceStatus     @default(DRAFT)
+  dueDate        DateTime
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  paymentMethod  PaymentMethod?   @relation(fields: [paymentMethodId], references: [id])
+  paymentMethodId String?
+  paymentHistory PaymentHistory[]
+  notifications  Notification[]
+  template       String?           // AI-generated template used
+}
+
+model Expense {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        Float
+  currency      Currency          @default(PKR)
+  category      String            // AI-categorized (e.g., Business, Travel)
+  description   String?
+  receiptUrl    String?           // Cloud storage URL
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model Tax {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          TaxType           @default(FBR)
+  amount        Float
+  currency      Currency          @default(PKR)
+  dueDate       DateTime
+  deductions    Json?             // AI-suggested deductions
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model Notification {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceId     String?
+  invoice       Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  type          NotificationType
+  message       String
+  isRead        Boolean           @default(false)
+  snoozeUntil   DateTime?         // For customizable snooze
+  createdAt     DateTime          @default(now())
+}
+
+model Subscription {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          String            // e.g., "Basic $5/month"
+  status        SubscriptionStatus @default(ACTIVE)
+  billingCycle  String            // Monthly or Annual
+  nextBilling   DateTime
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  paymentHistory PaymentHistory[]
+}
+
+model Document {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          DocumentType
+  fileUrl       String            // Cloud storage URL
+  hash          String            // Blockchain hash
+  timestamp     DateTime          @default(now())
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  auditLogs     AuditLog[]
+  permissions   Json?             // Permission tokens for sharing
+}
+
+model AuditLog {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentId    String?
+  document      Document?         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  action        String            // e.g., "VIEW", "EDIT", "SHARE"
+  details       Json?             // Additional details
+  createdAt     DateTime          @default(now())
+}
+
+model Backup {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  backupUrl     String            // AWS S3 URL
+  createdAt     DateTime          @default(now())
+}
+
+model EmailSetting {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      String            // e.g., "Gmail", "Outlook"
+  oauthToken    String
+  filterConfig  Json?             // AI email filter settings
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model PaymentMethod {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          PaymentMethodType
+  details       Json              // e.g., {"accountId": "xxx", "last4": "1234"}
+  invoices      Invoice[]         // Relation to Invoice model
+  paymentHistory PaymentHistory[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model PaymentHistory {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceId     String?
+  invoice       Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  subscriptionId String?
+  subscription  Subscription?     @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  paymentMethodId String?
+  paymentMethod PaymentMethod?    @relation(fields: [paymentMethodId], references: [id], onDelete: Cascade)
+  amount        Float
+  currency      Currency          @default(PKR)
+  status        PaymentStatus
+  transactionId String?           // External transaction ID
+  createdAt     DateTime          @default(now())
+}
+
+model ApiKey {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform      String            // e.g., "Upwork", "Fiverr", "Shopify"
+  key           String            @unique
+  rateLimit     Int?              // Rate limit for API
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model Storefront {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform      String            // e.g., "Shopify", "Wix", "Webflow"
+  apiKey        String?           // Optional API key for platform
+  riskScore     Float?            // AI-generated risk score
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  threatLogs    ThreatLog[]
+}
+
+model ThreatLog {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storefrontId  String?
+  storefront    Storefront?       @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+  type          ThreatType
+  description   String
+  resolved      Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+}
+
+model CashFlow {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  predictedAmount Float           // AI-predicted cash flow
+  currency      Currency          @default(PKR)
+  period        String            // e.g., "Next 30 days"
+  riskAlert     String?           // e.g., "Overspending warning"
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}

@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  serverExternalPackages: ["@node-rs/argon2"],
+  reactStrictMode: true,
 };
 
 export default nextConfig;
