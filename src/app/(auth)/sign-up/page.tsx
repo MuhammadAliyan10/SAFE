@@ -147,7 +147,7 @@ export default function RegisterPage() {
       toast.success("Account created successfully", {
         description: "Navigating to dashboard..",
       });
-      router.push("/dashboard");
+      router.push("/main");
     } catch (error) {
       console.error("Registration error:", error);
       toast.error("Error while creating account", {
@@ -160,7 +160,7 @@ export default function RegisterPage() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center">
+      <div className="flex min-h-screen w-full items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -174,7 +174,7 @@ export default function RegisterPage() {
       transition: {
         duration: 0.6,
         staggerChildren: 0.1,
-        ease: [0.42, 0, 0.58, 1], // Using cubic-bezier easing
+        ease: [0.42, 0, 0.58, 1],
       },
     },
   };
@@ -192,22 +192,22 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-black p-4">
+    <div className="flex min-h-screen w-full items-center justify-center bg-white p-4">
       <motion.div
         className="w-full max-w-md"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        <Card className="border border-white/10 shadow-2xl shadow-black/50 bg-black/20 backdrop-blur-xl backdrop-saturate-150">
+        <Card className="border border-gray-200 shadow-xl shadow-gray-200/20 bg-white/10 backdrop-blur-lg backdrop-saturate-200">
           <CardHeader className="space-y-2 pb-2">
             <motion.div variants={itemVariants}>
-              <CardTitle className="text-2xl font-semibold text-white text-center tracking-tight">
+              <CardTitle className="text-2xl font-semibold text-gray-800 text-center tracking-tight">
                 Create your account
               </CardTitle>
             </motion.div>
             <motion.div variants={itemVariants}>
-              <CardDescription className="text-slate-300 text-center text-sm">
+              <CardDescription className="text-gray-500 text-center text-sm">
                 Join thousands of professionals already using our platform
               </CardDescription>
             </motion.div>
@@ -217,9 +217,9 @@ export default function RegisterPage() {
             <motion.div variants={itemVariants}>
               <div className="relative flex items-center justify-center">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/20" />
+                  <span className="w-full border-t border-gray-300" />
                 </div>
-                <span className="relative bg-black/40 backdrop-blur-sm px-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <span className="relative bg-white/10 backdrop-blur-sm px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Or continue with email
                 </span>
               </div>
@@ -236,16 +236,20 @@ export default function RegisterPage() {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-200">
+                        <FormLabel className="text-sm font-medium text-gray-700">
                           Username
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input
                               placeholder="Enter your username"
                               {...field}
-                              className="h-11 pl-10 border-white/20 bg-white/5 backdrop-blur-sm text-white placeholder:text-slate-400 focus:border-white/40 focus:bg-white/10 transition-colors"
+                              className="h-11 pl-10 border
+                              border-gray-300 bg-white/20 backdrop-blur-sm
+                              text-gray-800 placeholder:text-gray-400
+                              focus:border-gray-400 focus:bg-white/30
+                              transition-colors rounded-lg"
                               disabled={isLoading}
                             />
                           </div>
@@ -262,17 +266,17 @@ export default function RegisterPage() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <FormLabel className="text-sm font-medium text-gray-700">
                           Email Address
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input
                               type="email"
                               placeholder="Enter your email address"
                               {...field}
-                              className="h-11 pl-10 border-white/20 bg-white/5 backdrop-blur-sm text-white placeholder:text-slate-400 focus:border-white/40 focus:bg-white/10 transition-colors"
+                              className="h-11 pl-10 border-gray-300 bg-white/20 backdrop-blur-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-400 focus:bg-white/30 transition-colors rounded-lg"
                               disabled={isLoading}
                             />
                           </div>
@@ -289,7 +293,7 @@ export default function RegisterPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <FormLabel className="text-sm font-medium text-gray-700">
                           Password
                         </FormLabel>
                         <FormControl>
@@ -298,7 +302,7 @@ export default function RegisterPage() {
                               type={showPassword ? "text" : "password"}
                               placeholder="Create a strong password"
                               {...field}
-                              className="h-11 pr-10 border-white/20 bg-white/5 backdrop-blur-sm text-white placeholder:text-slate-400 focus:border-white/40 focus:bg-white/10 transition-colors"
+                              className="h-11 pr-10 border-gray-300 bg-white/20 backdrop-blur-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-400 focus:bg-white/30 transition-colors rounded-lg"
                               disabled={isLoading}
                             />
                             <Button
@@ -310,9 +314,9 @@ export default function RegisterPage() {
                               disabled={isLoading}
                             >
                               {showPassword ? (
-                                <EyeOff className="h-4 w-4 text-slate-400" />
+                                <EyeOff className="h-4 w-4 text-gray-400" />
                               ) : (
-                                <Eye className="h-4 w-4 text-slate-400" />
+                                <Eye className="h-4 w-4 text-gray-400" />
                               )}
                             </Button>
                           </div>
@@ -320,22 +324,22 @@ export default function RegisterPage() {
                         {watchedPassword && (
                           <div className="mt-2">
                             <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="text-slate-300">
+                              <span className="text-gray-500">
                                 Password strength
                               </span>
                               <span
                                 className={`font-medium ${
                                   passwordStrength.score >= 4
-                                    ? "text-green-400"
+                                    ? "text-green-500"
                                     : passwordStrength.score >= 3
-                                    ? "text-blue-400"
-                                    : "text-red-400"
+                                    ? "text-blue-500"
+                                    : "text-red-500"
                                 }`}
                               >
                                 {passwordStrength.text}
                               </span>
                             </div>
-                            <div className="w-full bg-white/10 rounded-full h-1.5">
+                            <div className="w-full bg-gray-200 rounded-full h-1.5">
                               <div
                                 className={`${passwordStrength.color} h-1.5 rounded-full transition-all duration-300 ease-out`}
                                 style={{
@@ -359,7 +363,7 @@ export default function RegisterPage() {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <FormLabel className="text-sm font-medium text-gray-700">
                           Confirm Password
                         </FormLabel>
                         <FormControl>
@@ -368,7 +372,7 @@ export default function RegisterPage() {
                               type={showConfirmPassword ? "text" : "password"}
                               placeholder="Confirm your password"
                               {...field}
-                              className="h-11 pr-10 border-white/20 bg-white/5 backdrop-blur-sm text-white placeholder:text-slate-400 focus:border-white/40 focus:bg-white/10 transition-colors"
+                              className="h-11 pr-10 border-gray-300 bg-white/20 backdrop-blur-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-400 focus:bg-white/30 transition-colors rounded-lg"
                               disabled={isLoading}
                             />
                             <Button
@@ -382,9 +386,9 @@ export default function RegisterPage() {
                               disabled={isLoading}
                             >
                               {showConfirmPassword ? (
-                                <EyeOff className="h-4 w-4 text-slate-400" />
+                                <EyeOff className="h-4 w-4 text-gray-400" />
                               ) : (
-                                <Eye className="h-4 w-4 text-slate-400" />
+                                <Eye className="h-4 w-4 text-gray-400" />
                               )}
                               {field.value && watchedPassword && (
                                 <div className="absolute -right-8 top-1/2 -translate-y-1/2">
@@ -414,23 +418,23 @@ export default function RegisterPage() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className="mt-0.5 data-[state=checked]:bg-white data-[state=checked]:border-white border-white/30"
+                            className="mt-0.5 data-[state=checked]:bg-gray-600 data-[state=checked]:border-gray-600 border-gray-400"
                             disabled={isLoading}
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel className="text-sm text-slate-300 font-normal">
+                          <FormLabel className="text-sm text-gray-500 font-normal">
                             I agree to the{" "}
                             <Link
                               href="/terms"
-                              className="font-medium text-white hover:underline underline-offset-4"
+                              className="font-medium text-gray-800 hover:underline underline-offset-4"
                             >
                               Terms of Service
                             </Link>{" "}
                             and{" "}
                             <Link
                               href="/privacy"
-                              className="font-medium text-white hover:underline underline-offset-4"
+                              className="font-medium text-gray-800 hover:underline underline-offset-4"
                             >
                               Privacy Policy
                             </Link>
@@ -445,7 +449,7 @@ export default function RegisterPage() {
                 <motion.div variants={itemVariants}>
                   <Button
                     type="submit"
-                    className="w-full h-11 bg-white/10 hover:bg-white/20 text-white font-medium backdrop-blur-sm border border-white/20 hover:border-white/30 transition-colors"
+                    className="w-full h-11 bg-gray-800 hover:bg-gray-900 text-white font-medium backdrop-blur-sm border border-gray-300 hover:border-gray-400 transition-colors rounded-lg"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -464,13 +468,13 @@ export default function RegisterPage() {
 
           <CardFooter className="pt-2">
             <motion.p
-              className="text-center text-sm text-slate-300 w-full"
+              className="text-center text-sm text-gray-500 w-full"
               variants={itemVariants}
             >
               Already have an account?{" "}
               <Link
                 href="/sign-in"
-                className="font-medium text-white hover:underline underline-offset-4 transition-colors"
+                className="font-medium text-gray-800 hover:underline underline-offset-4 transition-colors"
               >
                 Sign in
               </Link>
@@ -480,7 +484,7 @@ export default function RegisterPage() {
 
         <motion.div
           variants={itemVariants}
-          className="mt-4 text-center text-xs text-slate-400"
+          className="mt-4 text-center text-xs text-gray-500"
         >
           <Shield className="h-3 w-3 inline mr-1" />
           Your data is encrypted and secure

@@ -85,7 +85,7 @@ export default function LoginPage() {
       }
 
       toast.success("Welcome back! Redirecting to your dashboard...");
-      router.push("/dashboard");
+      router.push("/main");
     } catch (error) {
       console.error("Login error:", error);
       setLoginAttempts((prev) => prev + 1);
@@ -97,8 +97,8 @@ export default function LoginPage() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex min-h-screen w-full items-center justify-center bg-white">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -130,76 +130,47 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-black p-4">
+    <div className="flex min-h-screen w-full items-center justify-center bg-white p-4">
       <motion.div
         className="w-full max-w-md"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        <Card className="border border-white/10 shadow-2xl shadow-black/50 bg-black/20 backdrop-blur-xl backdrop-saturate-150">
+        <Card className="border border-gray-200 shadow-xl shadow-gray-200/20 bg-white/10 backdrop-blur-lg backdrop-saturate-200">
           <CardHeader className="space-y-2 pb-6">
-            {/* <motion.div
-              variants={itemVariants}
-              className="flex items-center justify-center mb-2"
-            >
-              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 mb-2">
-                <Shield className="h-6 w-6 text-white" />
-              </div>
-            </motion.div> */}
             <motion.div variants={itemVariants}>
-              <CardTitle className="text-2xl font-semibold text-white text-center tracking-tight">
+              <CardTitle className="text-2xl font-semibold text-gray-800 text-center tracking-tight">
                 Welcome back
               </CardTitle>
             </motion.div>
             <motion.div variants={itemVariants}>
-              <CardDescription className="text-slate-300 text-center text-sm">
+              <CardDescription className="text-gray-500 text-center text-sm">
                 Sign in to your account to continue where you left off
               </CardDescription>
             </motion.div>
           </CardHeader>
 
           <CardContent className="space-y-6 px-6">
-            {/* Login Attempts Warning */}
             {loginAttempts >= 3 && (
               <motion.div
                 variants={itemVariants}
-                className="flex items-center p-3 rounded-lg bg-amber-900/20 backdrop-blur-sm border border-amber-500/30"
+                className="flex items-center p-3 rounded-lg bg-amber-100/20 backdrop-blur-sm border border-amber-300/30"
               >
-                <AlertCircle className="h-4 w-4 text-amber-400 mr-2 flex-shrink-0" />
-                <p className="text-sm text-amber-300">
+                <AlertCircle className="h-4 w-4 text-amber-600 mr-2 flex-shrink-0" />
+                <p className="text-sm text-amber-600">
                   Multiple failed attempts detected. Please check your
                   credentials or reset your password.
                 </p>
               </motion.div>
             )}
 
-            {/* Social Login Options */}
             <motion.div variants={itemVariants}>
-              {/* <div className="grid grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  className="h-11 border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm transition-colors"
-                  disabled={isLoading}
-                >
-                  <Chrome className="h-4 w-4 mr-2" />
-                  Google
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-11 border-white/20 bg-white/5 hover:bg-white/10 text-white backdrop-blur-sm transition-colors"
-                  disabled={isLoading}
-                >
-                  <Github className="h-4 w-4 mr-2" />
-                  GitHub
-                </Button>
-              </div> */}
-
               <div className="relative flex items-center justify-center">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/20" />
+                  <span className="w-full border-t border-gray-300" />
                 </div>
-                <span className="relative bg-black/40 backdrop-blur-sm px-4 text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <span className="relative bg-white/10 backdrop-blur-sm px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   continue with email
                 </span>
               </div>
@@ -216,17 +187,17 @@ export default function LoginPage() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-200">
+                        <FormLabel className="text-sm font-medium text-gray-700">
                           Email Address
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                             <Input
                               type="email"
                               placeholder="Enter your email address"
                               {...field}
-                              className="h-11 pl-10 border-white/20 bg-white/5 backdrop-blur-sm text-white placeholder:text-slate-400 focus:border-white/40 focus:bg-white/10 transition-colors"
+                              className="h-11 pl-10 border-gray-300 bg-white/20 backdrop-blur-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-400 focus:bg-white/30 transition-colors rounded-lg"
                               disabled={isLoading}
                               autoComplete="email"
                             />
@@ -244,7 +215,7 @@ export default function LoginPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <FormLabel className="text-sm font-medium text-gray-700">
                           Password
                         </FormLabel>
                         <FormControl>
@@ -253,7 +224,7 @@ export default function LoginPage() {
                               type={showPassword ? "text" : "password"}
                               placeholder="Enter your password"
                               {...field}
-                              className="h-11 pr-10 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
+                              className="h-11 pr-10 border-gray-300 bg-white/20 backdrop-blur-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-400 focus:bg-white/30 transition-colors rounded-lg"
                               disabled={isLoading}
                               autoComplete="current-password"
                             />
@@ -266,9 +237,9 @@ export default function LoginPage() {
                               disabled={isLoading}
                             >
                               {showPassword ? (
-                                <EyeOff className="h-4 w-4 text-slate-400" />
+                                <EyeOff className="h-4 w-4 text-gray-400" />
                               ) : (
-                                <Eye className="h-4 w-4 text-slate-400" />
+                                <Eye className="h-4 w-4 text-gray-400" />
                               )}
                             </Button>
                           </div>
@@ -292,12 +263,12 @@ export default function LoginPage() {
                           id="rememberMe"
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          className="data-[state=checked]:bg-slate-900 data-[state=checked]:border-slate-900 dark:data-[state=checked]:bg-white dark:data-[state=checked]:border-white"
+                          className="mt-0.5 data-[state=checked]:bg-gray-600 data-[state=checked]:border-gray-600 border-gray-400"
                           disabled={isLoading}
                         />
                         <label
                           htmlFor="rememberMe"
-                          className="text-sm text-slate-600 dark:text-slate-400 cursor-pointer"
+                          className="text-sm text-gray-500 cursor-pointer"
                         >
                           Remember me
                         </label>
@@ -306,7 +277,7 @@ export default function LoginPage() {
                   />
                   <Link
                     href="/auth/forgot-password"
-                    className="text-sm font-medium text-slate-900 dark:text-white hover:underline underline-offset-4 transition-colors"
+                    className="text-sm font-medium text-gray-800 hover:underline underline-offset-4 transition-colors"
                   >
                     Forgot password?
                   </Link>
@@ -315,7 +286,7 @@ export default function LoginPage() {
                 <motion.div variants={itemVariants}>
                   <Button
                     type="submit"
-                    className="w-full h-11 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 dark:text-slate-900 font-medium transition-colors group"
+                    className="w-full h-11 bg-gray-800 hover:bg-gray-900 text-white font-medium backdrop-blur-sm border border-gray-300 hover:border-gray-400 transition-colors rounded-lg group"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -334,18 +305,17 @@ export default function LoginPage() {
               </form>
             </Form>
 
-            {/* Quick Actions */}
             <motion.div variants={itemVariants} className="pt-2">
               <div className="grid grid-cols-2 gap-3 text-center">
                 <Link
                   href="/auth/forgot-password"
-                  className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-lg hover:bg-gray-100"
                 >
                   Reset Password
                 </Link>
                 <Link
                   href="/support"
-                  className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-lg hover:bg-gray-100"
                 >
                   Need Help?
                 </Link>
@@ -355,13 +325,13 @@ export default function LoginPage() {
 
           <CardFooter className="pt-4">
             <motion.p
-              className="text-center text-sm text-slate-600 dark:text-slate-400 w-full"
+              className="text-center text-sm text-gray-500 w-full"
               variants={itemVariants}
             >
               Do not have an account?
               <Link
                 href="/sign-up"
-                className="font-medium text-slate-900 dark:text-white hover:underline underline-offset-4 transition-colors ml-1"
+                className="font-medium text-gray-800 hover:underline underline-offset-4 transition-colors ml-1"
               >
                 Create an account
               </Link>
@@ -369,10 +339,9 @@ export default function LoginPage() {
           </CardFooter>
         </Card>
 
-        {/* Security Notice */}
         <motion.div
           variants={itemVariants}
-          className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400"
+          className="mt-6 text-center text-xs text-gray-500"
         >
           <Shield className="h-3 w-3 inline mr-1" />
           Protected by enterprise-grade security

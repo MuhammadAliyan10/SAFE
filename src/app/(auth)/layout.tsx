@@ -7,8 +7,9 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = await validateRequest();
-  if (user) redirect("/dashboard");
+  const { session } = await validateRequest();
+
+  if (session) redirect("/main");
 
   return <>{children}</>;
 }

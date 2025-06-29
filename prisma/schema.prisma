@@ -31,6 +31,13 @@ enum NotificationType {
   PUSH
 }
 
+enum ProjectType {
+  BUSINESS_SECURITY
+  INVOICING
+  DOCUMENT_SECURITY
+  ALL_SERVICES
+}
+
 enum ClientStatus {
   ACTIVE
   INACTIVE
@@ -94,6 +101,7 @@ model User {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   clients        Client[]
+  projects       Project[]
   invoices       Invoice[]
   expenses       Expense[]
   sessions       Session[]
@@ -111,6 +119,20 @@ model User {
   threatLogs     ThreatLog[]
   cashFlow       CashFlow[]
 }
+
+model Project {
+  id             String            @id @default(uuid())
+  name           String
+  description    String
+  type           ProjectType       @default(ALL_SERVICES)
+  info           Json              @default("{}")
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+
 
 model Session {
   id        String   @id
