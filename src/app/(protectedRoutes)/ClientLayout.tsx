@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Navbar from "../../components/LayoutComponents/Navbar";
 import Sidebar from "../../components/LayoutComponents/Sidebar";
 
@@ -50,6 +52,7 @@ const ClientLayout = ({ children, user, session }: LayoutProps) => {
   const toggleSidebar = () => {
     setIsExpanded((prev) => !prev);
   };
+  const queryClient = new QueryClient();
 
   return (
     <SessionProvider value={{ user, session }}>
@@ -77,7 +80,9 @@ const ClientLayout = ({ children, user, session }: LayoutProps) => {
 
           {/* Main Content Area */}
           <main className="flex-1 overflow-y-hidden pt-16 pl-4 pr-4 pb-4">
-            {children}
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
           </main>
         </div>
       </div>

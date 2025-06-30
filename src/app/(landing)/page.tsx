@@ -90,44 +90,44 @@ const featuredNotifications: Notification[] = [
     title: "Unpaid Invoice #123",
     description: "Due tomorrow for client Alex K.",
     user: "System",
-    userAvatar: "/api/placeholder/32/32",
+    userAvatar: "/User.avif",
     status: "Unread",
     type: "Email",
     due: "Tomorrow",
-    image: "/Home/Invoice.png",
+    image: "/DummyDashboard.png",
   },
   {
     id: 2,
     title: "Tax Deadline Approaching",
     description: "FBR tax filing due in 5 days",
     user: "System",
-    userAvatar: "/api/placeholder/32/32",
+    userAvatar: "/User.avif",
     status: "Read",
     type: "Push",
     due: "5 days",
-    image: "/Home/Tax.png",
+    image: "/DummyDashboard.png",
   },
   {
     id: 3,
     title: "Low Cash Flow Alert",
     description: "Predicted cash flow: 30K PKR next month",
     user: "System",
-    userAvatar: "/api/placeholder/32/32",
+    userAvatar: "/User.avif",
     status: "Unread",
     type: "WhatsApp",
     due: "Next month",
-    image: "/Home/CashFlow.png",
+    image: "/DummyDashboard.png",
   },
   {
     id: 4,
     title: "Client Follow-Up",
     description: "Send reminder to Maya T. for overdue payment",
     user: "System",
-    userAvatar: "/api/placeholder/32/32",
+    userAvatar: "/User.avif",
     status: "Unread",
     type: "Email",
     due: "Today",
-    image: "/Home/Client.png",
+    image: "/DummyDashboard.png",
   },
 ];
 
@@ -138,7 +138,7 @@ const testimonials: Testimonial[] = [
     role: "Freelancer",
     content:
       "SAFE streamlined my invoicing and tax management, saving me hours every week!",
-    avatar: "/api/placeholder/40/40",
+    avatar: "/User.avif",
   },
   {
     id: 2,
@@ -146,7 +146,7 @@ const testimonials: Testimonial[] = [
     role: "Small Business Owner",
     content:
       "The cash flow predictions and AI-driven insights are a game-changer for my business.",
-    avatar: "/api/placeholder/40/40",
+    avatar: "/User.avif",
   },
   {
     id: 3,
@@ -154,7 +154,7 @@ const testimonials: Testimonial[] = [
     role: "Consultant",
     content:
       "The multi-currency support and secure integrations make SAFE perfect for my global clients.",
-    avatar: "/api/placeholder/40/40",
+    avatar: "/User.avif",
   },
 ];
 

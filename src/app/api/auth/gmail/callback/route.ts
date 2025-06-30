@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verify } from "jsonwebtoken";
 import axios from "axios";
-import { storeGmailSettings } from "../../../../(protectedRoutes)/apps/[id]/dashboard/actions";
+import { storeGmailSettings } from "@/app/(protectedRoutes)/apps/[id]/dashboard/actions";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
@@ -72,9 +73,9 @@ export async function GET(req: NextRequest) {
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
-    const { access_token } = tokenResponse.data;
+    const { access_token, refresh_token } = tokenResponse.data;
 
-    await storeGmailSettings(userId, access_token);
+    await storeGmailSettings(userId, access_token, refresh_token);
 
     const redirectUrl = new URL(
       `${process.env.NEXT_PUBLIC_APP_URL}/apps/${projectId}/dashboard`
