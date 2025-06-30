@@ -1,5 +1,6 @@
 "use client";
 import { logout } from "@/app/(auth)/actions";
+import { fetchProjectInformation } from "@/app/actions/main";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -43,9 +44,18 @@ import {
   Mail,
   ShieldCheck,
 } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
+
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  service: string;
+  createdAt: string;
+  lastModified: string;
+}
 
 interface NavItem {
   name: string;
@@ -64,6 +74,13 @@ interface SidebarProps {
   toggleSidebar: () => void;
 }
 
+enum ProjectType {
+  BUSINESS_SECURITY = "BUSINESS_SECURITY",
+  INVOICING = "INVOICING",
+  DOCUMENT_SECURITY = "DOCUMENT_SECURITY",
+  ALL_SERVICES = "ALL_SERVICES",
+}
+
 const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
   const [expandedSections, setExpandedSections] = useState<{
     [key: string]: boolean;
@@ -72,6 +89,432 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
+  const projectId = params.id as string;
+  const [projectDetails, setProjectDetails] = useState<Project>();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const navItemsByService: { [key in ProjectType]: NavItem[] } = {
+    [ProjectType.BUSINESS_SECURITY]: [
+      {
+        name: "Dashboard",
+        icon: BarChart3,
+        section: null,
+        path: `/apps/${projectId}/dashboard`,
+      },
+      {
+        name: "Email Management",
+        icon: Mail,
+        section: "dropdown",
+        children: [
+          { name: "Inbox", icon: Mail, path: `/apps/${projectId}/email/inbox` },
+          {
+            name: "Automated Orders",
+            icon: FileText,
+            path: `/apps/${projectId}/email/orders`,
+          },
+          {
+            name: "Threat Detection",
+            icon: Shield,
+            path: `/apps/${projectId}/email/threats`,
+          },
+          {
+            name: "Auto-Save",
+            icon: FileText,
+            path: `/apps/${projectId}/email/autosave`,
+          },
+          {
+            name: "Settings",
+            icon: SettingsIcon,
+            path: `/apps/${projectId}/email/settings`,
+          },
+        ],
+      },
+      {
+        name: "Security",
+        icon: Shield,
+        section: "dropdown",
+        children: [
+          {
+            name: "2FA Setup",
+            icon: Lock,
+            path: `/apps/${projectId}/security/2fa`,
+          },
+          {
+            name: "Threat Alerts",
+            icon: Shield,
+            path: `/apps/${projectId}/security/threats`,
+          },
+          {
+            name: "SDKs & Code",
+            icon: Code,
+            path: `/apps/${projectId}/security/sdks`,
+          },
+          {
+            name: "Hosting Protection",
+            icon: Store,
+            path: `/apps/${projectId}/security/hosting`,
+          },
+          {
+            name: "Audit Logs",
+            icon: FileText,
+            path: `/apps/${projectId}/security/audit`,
+          },
+        ],
+      },
+      {
+        name: "Settings",
+        icon: SettingsIcon,
+        section: null,
+        path: `/apps/${projectId}/settings`,
+      },
+      {
+        name: "Support",
+        icon: HelpCircle,
+        section: null,
+        path: `/apps/${projectId}/support`,
+      },
+    ],
+    [ProjectType.INVOICING]: [
+      {
+        name: "Dashboard",
+        icon: BarChart3,
+        section: null,
+        path: `/apps/${projectId}/dashboard`,
+      },
+      {
+        name: "Invoicing",
+        icon: FileLock,
+        section: "dropdown",
+        children: [
+          {
+            name: "Create Invoice",
+            icon: FileLock,
+            path: `/apps/${projectId}/invoicing/create`,
+          },
+          {
+            name: "Invoice History",
+            icon: FileText,
+            path: `/apps/${projectId}/invoicing/history`,
+          },
+          {
+            name: "Payments",
+            icon: CreditCard,
+            path: `/apps/${projectId}/invoicing/payments`,
+          },
+        ],
+      },
+      {
+        name: "Clients",
+        icon: MessageCircle,
+        section: "dropdown",
+        children: [
+          {
+            name: "Manage Clients",
+            icon: MessageCircle,
+            path: `/apps/${projectId}/clients/manage`,
+          },
+          {
+            name: "Client History",
+            icon: FileText,
+            path: `/apps/${projectId}/clients/history`,
+          },
+        ],
+      },
+      {
+        name: "Expenses",
+        icon: Receipt,
+        section: "dropdown",
+        children: [
+          {
+            name: "Add Expense",
+            icon: Receipt,
+            path: `/apps/${projectId}/expenses/add`,
+          },
+          {
+            name: "Expense History",
+            icon: FileText,
+            path: `/apps/${projectId}/expenses/history`,
+          },
+        ],
+      },
+      {
+        name: "Taxes",
+        icon: DollarSign,
+        section: "dropdown",
+        children: [
+          {
+            name: "Tax Summary",
+            icon: DollarSign,
+            path: `/apps/${projectId}/taxes/summary`,
+          },
+          {
+            name: "Export Reports",
+            icon: FileText,
+            path: `/apps/${projectId}/taxes/export`,
+          },
+        ],
+      },
+      {
+        name: "Settings",
+        icon: SettingsIcon,
+        section: null,
+        path: `/apps/${projectId}/settings`,
+      },
+      {
+        name: "Support",
+        icon: HelpCircle,
+        section: null,
+        path: `/apps/${projectId}/support`,
+      },
+    ],
+    [ProjectType.DOCUMENT_SECURITY]: [
+      {
+        name: "Dashboard",
+        icon: BarChart3,
+        section: null,
+        path: `/apps/${projectId}/dashboard`,
+      },
+      {
+        name: "Documents",
+        icon: FileLock,
+        section: "dropdown",
+        children: [
+          {
+            name: "Upload Document",
+            icon: FileLock,
+            path: `/apps/${projectId}/documents/upload`,
+          },
+          {
+            name: "Share Securely",
+            icon: FileText,
+            path: `/apps/${projectId}/documents/share`,
+          },
+          {
+            name: "Document History",
+            icon: FileText,
+            path: `/apps/${projectId}/documents/history`,
+          },
+        ],
+      },
+      {
+        name: "Settings",
+        icon: SettingsIcon,
+        section: null,
+        path: `/apps/${projectId}/settings`,
+      },
+      {
+        name: "Support",
+        icon: HelpCircle,
+        section: null,
+        path: `/apps/${projectId}/support`,
+      },
+    ],
+    [ProjectType.ALL_SERVICES]: [
+      {
+        name: "Dashboard",
+        icon: BarChart3,
+        section: null,
+        path: `/apps/${projectId}/dashboard`,
+      },
+      {
+        name: "Email Management",
+        icon: Mail,
+        section: "dropdown",
+        children: [
+          { name: "Inbox", icon: Mail, path: `/apps/${projectId}/email/inbox` },
+          {
+            name: "Automated Orders",
+            icon: FileText,
+            path: `/apps/${projectId}/email/orders`,
+          },
+          {
+            name: "Threat Detection",
+            icon: Shield,
+            path: `/apps/${projectId}/email/threats`,
+          },
+          {
+            name: "Auto-Save",
+            icon: FileText,
+            path: `/apps/${projectId}/email/autosave`,
+          },
+          {
+            name: "Settings",
+            icon: SettingsIcon,
+            path: `/apps/${projectId}/email/settings`,
+          },
+        ],
+      },
+      {
+        name: "Security",
+        icon: Shield,
+        section: "dropdown",
+        children: [
+          {
+            name: "2FA Setup",
+            icon: Lock,
+            path: `/apps/${projectId}/security/2fa`,
+          },
+          {
+            name: "Threat Alerts",
+            icon: Shield,
+            path: `/apps/${projectId}/security/threats`,
+          },
+          {
+            name: "SDKs & Code",
+            icon: Code,
+            path: `/apps/${projectId}/security/sdks`,
+          },
+          {
+            name: "Hosting Protection",
+            icon: Store,
+            path: `/apps/${projectId}/security/hosting`,
+          },
+          {
+            name: "Audit Logs",
+            icon: FileText,
+            path: `/apps/${projectId}/security/audit`,
+          },
+        ],
+      },
+      {
+        name: "Documents",
+        icon: FileLock,
+        section: "dropdown",
+        children: [
+          {
+            name: "Upload Document",
+            icon: FileLock,
+            path: `/apps/${projectId}/documents/upload`,
+          },
+          {
+            name: "Share Securely",
+            icon: FileText,
+            path: `/apps/${projectId}/documents/share`,
+          },
+          {
+            name: "Document History",
+            icon: FileText,
+            path: `/apps/${projectId}/documents/history`,
+          },
+        ],
+      },
+      {
+        name: "Invoicing",
+        icon: FileLock,
+        section: "dropdown",
+        children: [
+          {
+            name: "Create Invoice",
+            icon: FileLock,
+            path: `/apps/${projectId}/invoicing/create`,
+          },
+          {
+            name: "Invoice History",
+            icon: FileText,
+            path: `/apps/${projectId}/invoicing/history`,
+          },
+          {
+            name: "Payments",
+            icon: CreditCard,
+            path: `/apps/${projectId}/invoicing/payments`,
+          },
+        ],
+      },
+      {
+        name: "Clients",
+        icon: MessageCircle,
+        section: "dropdown",
+        children: [
+          {
+            name: "Manage Clients",
+            icon: MessageCircle,
+            path: `/apps/${projectId}/clients/manage`,
+          },
+          {
+            name: "Client History",
+            icon: FileText,
+            path: `/apps/${projectId}/clients/history`,
+          },
+        ],
+      },
+      {
+        name: "Expenses",
+        icon: Receipt,
+        section: "dropdown",
+        children: [
+          {
+            name: "Add Expense",
+            icon: Receipt,
+            path: `/apps/${projectId}/expenses/add`,
+          },
+          {
+            name: "Expense History",
+            icon: FileText,
+            path: `/apps/${projectId}/expenses/history`,
+          },
+        ],
+      },
+      {
+        name: "Taxes",
+        icon: DollarSign,
+        section: "dropdown",
+        children: [
+          {
+            name: "Tax Summary",
+            icon: DollarSign,
+            path: `/apps/${projectId}/taxes/summary`,
+          },
+          {
+            name: "Export Reports",
+            icon: FileText,
+            path: `/apps/${projectId}/taxes/export`,
+          },
+        ],
+      },
+      {
+        name: "Integrations",
+        icon: Key,
+        section: "dropdown",
+        children: [
+          {
+            name: "Payment Methods",
+            icon: CreditCard,
+            path: `/apps/${projectId}/integrations/payments`,
+          },
+          {
+            name: "Storefronts",
+            icon: Store,
+            path: `/apps/${projectId}/integrations/storefronts`,
+          },
+        ],
+      },
+      {
+        name: "Subscriptions",
+        icon: CreditCard,
+        section: null,
+        path: `/apps/${projectId}/subscriptions`,
+      },
+      {
+        name: "Calendar",
+        icon: Calendar,
+        section: null,
+        path: `/apps/${projectId}/calendar`,
+      },
+      {
+        name: "Settings",
+        icon: SettingsIcon,
+        section: null,
+        path: `/apps/${projectId}/settings`,
+      },
+      {
+        name: "Support",
+        icon: HelpCircle,
+        section: null,
+        path: `/apps/${projectId}/support`,
+      },
+    ],
+  };
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -86,6 +529,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
     window.addEventListener("resize", checkScreenSize);
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
+
+  useEffect(() => {
+    const fetchProjectDetails = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetchProjectInformation(projectId);
+        setProjectDetails(res);
+      } catch (error) {
+        console.log(error);
+        toast.error("Error while fetching project details. Try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProjectDetails();
+  }, [projectId]);
 
   const handleToggleSidebar = () => {
     if (isMobile) {
@@ -102,115 +561,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
     }));
   };
 
-  const navItems: NavItem[] = [
-    { name: "Dashboard", icon: BarChart3, section: null, path: "/dashboard" },
-    {
-      name: "Email Management",
-      icon: Mail,
-      section: "dropdown",
-      children: [
-        { name: "Inbox", icon: Mail, path: "/email/inbox" },
-        { name: "Automated Orders", icon: FileText, path: "/email/orders" },
-        { name: "Threat Detection", icon: Shield, path: "/email/threats" },
-        { name: "Auto-Save", icon: FileText, path: "/email/autosave" },
-        { name: "Settings", icon: SettingsIcon, path: "/email/settings" },
-      ],
-    },
-    {
-      name: "Security",
-      icon: Shield,
-      section: "dropdown",
-      children: [
-        { name: "2FA Setup", icon: Lock, path: "/security/2fa" },
-        { name: "Threat Alerts", icon: Shield, path: "/security/threats" },
-        { name: "SDKs & Code", icon: Code, path: "/security/sdks" },
-        { name: "Hosting Protection", icon: Store, path: "/security/hosting" },
-        { name: "Audit Logs", icon: FileText, path: "/security/audit" },
-      ],
-    },
-    {
-      name: "Documents",
-      icon: FileLock,
-      section: "dropdown",
-      children: [
-        { name: "Upload Document", icon: FileLock, path: "/documents/upload" },
-        { name: "Share Securely", icon: FileText, path: "/documents/share" },
-        {
-          name: "Document History",
-          icon: FileText,
-          path: "/documents/history",
-        },
-      ],
-    },
-    {
-      name: "Invoicing",
-      icon: FileLock,
-      section: "dropdown",
-      children: [
-        {
-          name: "Create Invoice",
-          icon: FileLock,
-          path: "/invoicing/create",
-        },
-        { name: "Invoice History", icon: FileText, path: "/invoicing/history" },
-        { name: "Payments", icon: CreditCard, path: "/invoicing/payments" },
-      ],
-    },
-    {
-      name: "Clients",
-      icon: MessageCircle,
-      section: "dropdown",
-      children: [
-        {
-          name: "Manage Clients",
-          icon: MessageCircle,
-          path: "/clients/manage",
-        },
-        { name: "Client History", icon: FileText, path: "/clients/history" },
-      ],
-    },
-    {
-      name: "Expenses",
-      icon: Receipt,
-      section: "dropdown",
-      children: [
-        { name: "Add Expense", icon: Receipt, path: "/expenses/add" },
-        { name: "Expense History", icon: FileText, path: "/expenses/history" },
-      ],
-    },
-    {
-      name: "Taxes",
-      icon: DollarSign,
-      section: "dropdown",
-      children: [
-        { name: "Tax Summary", icon: DollarSign, path: "/taxes/summary" },
-        { name: "Export Reports", icon: FileText, path: "/taxes/export" },
-      ],
-    },
-    {
-      name: "Integrations",
-      icon: Key,
-      section: "dropdown",
-      children: [
-        {
-          name: "Payment Methods",
-          icon: CreditCard,
-          path: "/integrations/payments",
-        },
-        { name: "Storefronts", icon: Store, path: "/integrations/storefronts" },
-      ],
-    },
-    {
-      name: "Subscriptions",
-      icon: CreditCard,
-      section: null,
-      path: "/subscriptions",
-    },
-    { name: "Calendar", icon: Calendar, section: null, path: "/calendar" },
-    { name: "Settings", icon: SettingsIcon, section: null, path: "/settings" },
-    { name: "Support", icon: HelpCircle, section: null, path: "/support" },
-  ];
-
   const handleItemClick = (
     itemName: string,
     path?: string,
@@ -226,9 +576,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
 
   const handleLogout = async () => {
     try {
-      await logout();
       toast.success("Logout successfully");
-      router.push("/login");
+      router.push("/main");
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Error while logout. Try again later.");
@@ -329,7 +678,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
             </div>
             <div>
               <h1 className="text-xl dark:font-black bg-gradient-to-r from-white via-violet-200 to-blue-200 bg-clip-text text-transparent">
-                S A F E
+                {projectDetails?.name || "Loading..."}
               </h1>
             </div>
           </motion.div>
@@ -338,7 +687,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
 
       <div className="flex-1 overflow-y-auto py-2">
         <nav className="space-y-1">
-          {navItems.map((item) => renderNavItem(item))}
+          {(projectDetails
+            ? navItemsByService[projectDetails.service as ProjectType] ||
+              navItemsByService[ProjectType.ALL_SERVICES]
+            : []
+          ).map((item) => renderNavItem(item))}
         </nav>
       </div>
 
@@ -355,7 +708,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
             className="flex-shrink-0 light:text-gray-500 light:group-hover:text-red-600"
           />
           {(isExpanded || isMobile) && (
-            <span className="group-hover:text-red-600">Logout</span>
+            <span className="group-hover:text-red-600">Back To Main</span>
           )}
         </button>
       </div>

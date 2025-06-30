@@ -10,7 +10,7 @@ export default async function Layout({
   const { user, session } = await validateRequest();
 
   if (!session || !user?.id) {
-    redirect("/login");
+    redirect("/sign-in");
   }
 
   return (
