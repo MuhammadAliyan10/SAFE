@@ -482,56 +482,6 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-card">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-primary flex items-center space-x-2">
-            <Mail className="w-5 h-5 text-purple-600" />
-            <span>Recent Emails</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {cachedEmails.emails.length > 0 ? (
-            <div className="space-y-4">
-              {cachedEmails.emails.map((email) => (
-                <div
-                  key={email.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => handleEmailClick(email.id)}
-                >
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="font-medium">{email.from}</p>
-                      <p className="text-sm text-gray-600">{email.subject}</p>
-                      <p className="text-sm text-gray-500">{email.snippet}</p>
-                    </div>
-                    <p className="text-sm text-gray-400">{email.date}</p>
-                  </div>
-                  {selectedEmailId === email.id && (
-                    <div className="mt-4">
-                      {isLoadingEmailBody || isLoadingBody ? (
-                        <p className="text-muted-foreground">
-                          Loading email content...
-                        </p>
-                      ) : (
-                        <p className="text-sm">
-                          {emailBody || "No content available"}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-              {cachedEmails.emails.length >= 100 && (
-                <p className="text-center text-muted-foreground">
-                  Fetching more emails...
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="text-gray-500">No emails available.</p>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };

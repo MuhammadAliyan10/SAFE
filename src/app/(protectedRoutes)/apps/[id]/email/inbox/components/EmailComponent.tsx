@@ -1,3 +1,4 @@
+// /app/(protectedRoutes)/apps/[id]/inbox/page.tsx
 "use client";
 
 import { useSession } from "@/provider/SessionProvider";
@@ -5,7 +6,6 @@ import React, { useState, useEffect } from "react";
 import { Mail, Globe, Inbox, AlertTriangle, Star } from "lucide-react";
 import PageHeader from "@/components/ReuseableComponents/PageHeader";
 import TabsComponent from "@/components/ReuseableComponents/TabComponent";
-
 import {
   fetchGmailSettings,
   storeGmailSettings,
@@ -18,6 +18,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import InboxTab from "../tabs/InboxTab";
 import SpamTab from "../tabs/SpamTab";
 import ImportantTab from "../tabs/ImportantTab";
+import { Button } from "@/components/ui/button";
 
 interface Project {
   id: string;
@@ -131,12 +132,20 @@ const EmailComponent = () => {
   }, [projectId]);
 
   const tabsValue: Tab[] = [
-    { name: "Inbox", value: "inbox", component: <InboxTab userId={user.id} /> },
-    { name: "Spam", value: "spam", component: <SpamTab userId={user.id} /> },
+    {
+      name: "Inbox",
+      value: "inbox",
+      component: <InboxTab userId={user.id} projectId={projectId} />,
+    },
+    {
+      name: "Spam",
+      value: "spam",
+      component: <SpamTab userId={user.id} projectId={projectId} />,
+    },
     {
       name: "Important",
       value: "important",
-      component: <ImportantTab userId={user.id} />,
+      component: <ImportantTab userId={user.id} projectId={projectId} />,
     },
   ];
 
@@ -154,6 +163,21 @@ const EmailComponent = () => {
       window.location.href = redirectUrl.toString();
     } catch {
       toast.error("Failed to initiate Gmail connection.");
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      await queryClient.invalidateQueries({
+        queryKey: ["emailInsights", user.id, projectId],
+      });
+      await queryClient.fetchQuery({
+        queryKey: ["emailInsights", user.id, projectId],
+        queryFn: () => fetchGmailEmails(user.id, projectId, true),
+      });
+      toast.success("Email data refreshed successfully!");
+    } catch {
+      toast.error("Failed to refresh email data.");
     }
   };
 
@@ -185,28 +209,36 @@ const EmailComponent = () => {
   if (
     gmailSettings?.status !== 200 ||
     !gmailSettings?.res ||
-    insights?.hasGmail === false
+    insights?.emailCount === 0
   ) {
     return (
       <div className="w-full h-full flex flex-col justify-center items-center min-h-[500px] p-8">
         <div className="max-w-md text-center space-y-6">
           <div className="space-y-3">
             <h2 className="text-2xl font-bold text-primary">
-              Connect Your Email
+              {gmailSettings?.status === 200
+                ? "No Emails Found"
+                : "Connect Your Email"}
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Get personalized insights about your email security. We'll help
-              you identify threats, track email patterns, and keep your
-              communications safe.
+              {gmailSettings?.status === 200
+                ? "No emails were found in your Gmail account. Try refreshing to fetch new data."
+                : "Get personalized insights about your email security. We'll help you identify threats, track email patterns, and keep your communications safe."}
             </p>
           </div>
-          <button
+          <Button
             className="rounded-xl flex gap-2 items-center hover:cursor-pointer px-4 py-2 border border-border bg-primary/10 backdrop-blur-sm text-sm font-normal text-primary hover:bg-primary-20"
-            onClick={handleGmailConnect}
+            onClick={
+              gmailSettings?.status === 200 ? handleRefresh : handleGmailConnect
+            }
           >
             <Globe className="w-5 h-5" />
-            <span>Connect Gmail Account</span>
-          </button>
+            <span>
+              {gmailSettings?.status === 200
+                ? "Refresh Email Data"
+                : "Connect Gmail Account"}
+            </span>
+          </Button>
           <p className="text-xs text-muted-foreground">
             We use secure OAuth to connect your account. Your data is encrypted
             and never shared.
