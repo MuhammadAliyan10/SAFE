@@ -1,3 +1,4 @@
+// /prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -51,7 +52,6 @@ enum DocumentType {
   OTHER
 }
 
-
 enum PaymentMethodType {
   JAZZCASH
   EASYPAISA
@@ -89,14 +89,14 @@ enum ThreatType {
 
 model User {
   id             String            @id @default(uuid())
-  email          String            @unique // Login email
-  workingEmail   String?           @unique // Email for services (Gmail, Outlook)
+  email          String            @unique
+  workingEmail   String?           @unique
   username       String            @unique
   password       String
-  profileImage   String?           // Cloud storage URL for profile image
+  profileImage   String?
   googleId       String?           @unique
   twoFactor      Boolean           @default(false)
-  twoFactorType  String?           // Email or SMS
+  twoFactorType  String?
   role           Role              @default(FREELANCER)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
@@ -118,6 +118,7 @@ model User {
   paymentHistory PaymentHistory[]
   threatLogs     ThreatLog[]
   cashFlow       CashFlow[]
+  emails         Email[]
 }
 
 model Project {
@@ -131,9 +132,8 @@ model Project {
   user           User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
+  emails         Email[]
 }
-
-
 
 model Session {
   id        String   @id
@@ -152,7 +152,7 @@ model Client {
   email          String
   phone          String?
   status         ClientStatus      @default(ACTIVE)
-  projectHistory Json?             // Store project details as JSON
+  projectHistory Json?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   invoices       Invoice[]
@@ -165,8 +165,8 @@ model Invoice {
   clientId       String
   client         Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
   invoiceNumber  String            @unique
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
+  projectId      String
+  project        Project           @relation(fields: [projectId], references: [id])
   amount         Float
   currency       Currency          @default(PKR)
   status         InvoiceStatus     @default(DRAFT)
@@ -177,7 +177,7 @@ model Invoice {
   paymentMethodId String?
   paymentHistory PaymentHistory[]
   notifications  Notification[]
-  template       String?           // AI-generated template used
+  template       String?
 }
 
 model Expense {
@@ -186,9 +186,9 @@ model Expense {
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount        Float
   currency      Currency          @default(PKR)
-  category      String            // AI-categorized (e.g., Business, Travel)
+  category      String
   description   String?
-  receiptUrl    String?           // Cloud storage URL
+  receiptUrl    String?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 }
@@ -201,7 +201,7 @@ model Tax {
   amount        Float
   currency      Currency          @default(PKR)
   dueDate       DateTime
-  deductions    Json?             // AI-suggested deductions
+  deductions    Json?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 }
@@ -215,7 +215,7 @@ model Notification {
   type          NotificationType
   message       String
   isRead        Boolean           @default(false)
-  snoozeUntil   DateTime?         // For customizable snooze
+  snoozeUntil   DateTime?
   createdAt     DateTime          @default(now())
 }
 
@@ -223,9 +223,9 @@ model Subscription {
   id            String            @id @default(uuid())
   userId        String
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan          String            // e.g., "Basic $5/month"
+  plan          String
   status        SubscriptionStatus @default(ACTIVE)
-  billingCycle  String            // Monthly or Annual
+  billingCycle  String
   nextBilling   DateTime
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
@@ -237,13 +237,13 @@ model Document {
   userId        String
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   type          DocumentType
-  fileUrl       String            // Cloud storage URL
-  hash          String            // Blockchain hash
+  fileUrl       String
+  hash          String
   timestamp     DateTime          @default(now())
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   auditLogs     AuditLog[]
-  permissions   Json?             // Permission tokens for sharing
+  permissions   Json?
 }
 
 model AuditLog {
@@ -252,8 +252,8 @@ model AuditLog {
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   documentId    String?
   document      Document?         @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  action        String            // e.g., "VIEW", "EDIT", "SHARE"
-  details       Json?             // Additional details
+  action        String
+  details       Json?
   createdAt     DateTime          @default(now())
 }
 
@@ -261,7 +261,7 @@ model Backup {
   id            String            @id @default(uuid())
   userId        String
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  backupUrl     String            // AWS S3 URL
+  backupUrl     String
   createdAt     DateTime          @default(now())
 }
 
@@ -273,6 +273,7 @@ model EmailSetting {
   oauthToken    String
   refreshToken  String?
   filterConfig  Json?
+  historyId     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -282,8 +283,8 @@ model PaymentMethod {
   userId        String
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   type          PaymentMethodType
-  details       Json              // e.g., {"accountId": "xxx", "last4": "1234"}
-  invoices      Invoice[]         // Relation to Invoice model
+  details       Json
+  invoices      Invoice[]
   paymentHistory PaymentHistory[]
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
@@ -302,7 +303,7 @@ model PaymentHistory {
   amount        Float
   currency      Currency          @default(PKR)
   status        PaymentStatus
-  transactionId String?           // External transaction ID
+  transactionId String?
   createdAt     DateTime          @default(now())
 }
 
@@ -310,9 +311,9 @@ model ApiKey {
   id            String            @id @default(uuid())
   userId        String
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platform      String            // e.g., "Upwork", "Fiverr", "Shopify"
+  platform      String
   key           String            @unique
-  rateLimit     Int?              // Rate limit for API
+  rateLimit     Int?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 }
@@ -321,9 +322,9 @@ model Storefront {
   id            String            @id @default(uuid())
   userId        String
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platform      String            // e.g., "Shopify", "Wix", "Webflow"
-  apiKey        String?           // Optional API key for platform
-  riskScore     Float?            // AI-generated risk score
+  platform      String
+  apiKey        String?
+  riskScore     Float?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   threatLogs    ThreatLog[]
@@ -345,10 +346,25 @@ model CashFlow {
   id            String            @id @default(uuid())
   userId        String
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  predictedAmount Float           // AI-predicted cash flow
+  predictedAmount Float
   currency      Currency          @default(PKR)
-  period        String            // e.g., "Next 30 days"
-  riskAlert     String?           // e.g., "Overspending warning"
+  period        String
+  riskAlert     String?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+}
+
+model Email {
+  id        String    @id
+  userId    String
+  projectId String
+  threadId  String
+  snippet   String
+  from      String
+  to        String
+  subject   String
+  date      DateTime
+  labels    String[]
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }

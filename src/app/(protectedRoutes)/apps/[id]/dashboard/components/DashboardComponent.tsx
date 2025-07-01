@@ -1,16 +1,17 @@
+// /app/(protectedRoutes)/apps/[id]/dashboard/page.tsx
 "use client";
 
 import { useSession } from "@/provider/SessionProvider";
 import React, { useState, useEffect } from "react";
-import { ChartBar, Mail, Globe, Info } from "lucide-react";
+import { ChartBar, Globe } from "lucide-react";
 import PageHeader from "@/components/ReuseableComponents/PageHeader";
 import TabsComponent from "@/components/ReuseableComponents/TabComponent";
 import MainTab from "../tabs/MainTab";
 import {
+  fetchGmailEmails,
   fetchGmailSettings,
   storeGmailSettings,
-  fetchGmailEmails,
-} from "@/app/(protectedRoutes)/apps/[id]/dashboard/actions";
+} from "@/app/actions/gmail/action";
 import { fetchProjectInformation } from "@/app/actions/main";
 import { toast } from "sonner";
 import { useParams, useSearchParams } from "next/navigation";
@@ -21,14 +22,15 @@ import ClientInsightsTab from "../tabs/ClientInsightsTab";
 import ExpenseTrackingTab from "../tabs/ExpenseTrackingTab";
 import DocumentAnalyticsTab from "../tabs/DocumentAnalyticsTab";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 
 interface Project {
   id: string;
   name: string;
   description: string;
-  service: string;
+  type: string;
   createdAt: string;
-  lastModified: string;
+  updatedAt: string;
 }
 
 enum ProjectType {
@@ -53,41 +55,23 @@ const DashboardComponent = () => {
   const [projectDetails, setProjectDetails] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Query for Gmail settings
-  const {
-    data: gmailSettings,
-    isLoading: isLoadingSettings,
-    error: settingsError,
-  } = useQuery({
-    queryKey: ["gmailSettings", user.id],
+  const { data: gmailSettings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ["gmailSettings", user.id, projectId],
     queryFn: () => fetchGmailSettings(user.id),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    enabled: !!user.id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    enabled: !!user.id && !!projectId,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
   });
 
-  // Query for email insights
-  const {
-    data: insights,
-    isLoading: isLoadingInsights,
-    error: insightsError,
-  } = useQuery({
+  const { data: emailInsights } = useQuery({
     queryKey: ["emailInsights", user.id, projectId],
     queryFn: () => fetchGmailEmails(user.id, projectId),
-    enabled:
-      gmailSettings?.status === 200 &&
-      !!gmailSettings?.res &&
-      !!user.id &&
-      !!projectId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    enabled: !!user.id && !!projectId && !!gmailSettings?.res,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
-  // Handle OAuth callback
   useEffect(() => {
     const handleOAuthCallback = async () => {
       const accessToken = searchParams.get("access_token");
@@ -101,7 +85,7 @@ const DashboardComponent = () => {
           if (status === 200 || status === 201) {
             toast.success(message);
             await queryClient.invalidateQueries({
-              queryKey: ["gmailSettings", user.id],
+              queryKey: ["gmailSettings", user.id, projectId],
             });
             await queryClient.invalidateQueries({
               queryKey: ["emailInsights", user.id, projectId],
@@ -110,23 +94,11 @@ const DashboardComponent = () => {
           } else {
             toast.error("Failed to store Gmail settings.");
           }
-        } catch (error: any) {
-          console.error(
-            "handleOAuthCallback: Error storing Gmail settings for userId:",
-            user.id,
-            "Error:",
-            error.message
-          );
-          toast.error("Failed to store Gmail settings. Please try again.");
+        } catch {
+          toast.error("Failed to store Gmail settings.");
         }
       }
       if (error) {
-        console.error(
-          "handleOAuthCallback: OAuth error for userId:",
-          user.id,
-          "Error:",
-          decodeURIComponent(error)
-        );
         toast.error(decodeURIComponent(error));
         window.history.replaceState({}, "", `/apps/${projectId}/dashboard`);
       }
@@ -136,62 +108,21 @@ const DashboardComponent = () => {
     }
   }, [user.id, projectId, searchParams, queryClient]);
 
-  // Handle query errors
-  useEffect(() => {
-    if (settingsError) {
-      console.error(
-        "useQuery: Gmail settings error for userId:",
-        user.id,
-        "Error:",
-        settingsError.message
-      );
-      const message = settingsError.message.includes("network")
-        ? "Network error. Please check your connection and try again."
-        : settingsError.message.includes("401") ||
-          settingsError.message.includes("403")
-        ? "Gmail authentication expired. Please reconnect your account."
-        : "Failed to load Gmail settings. Please try again.";
-      toast.error(message);
-    }
-    if (insightsError) {
-      console.error(
-        "useQuery: Email insights error for userId:",
-        user.id,
-        "projectId:",
-        projectId,
-        "Error:",
-        insightsError.message
-      );
-      const message = insightsError.message.includes("network")
-        ? "Network error. Please check your connection and try again."
-        : insightsError.message.includes("401") ||
-          insightsError.message.includes("403")
-        ? "Gmail authentication expired. Please reconnect your account."
-        : "Failed to load email insights. Please try again.";
-      toast.error(message);
-    }
-  }, [settingsError, insightsError, user.id, projectId]);
-
-  // Fetch project details
   useEffect(() => {
     const fetchProjectDetails = async () => {
       setIsLoading(true);
       try {
         const res = await fetchProjectInformation(projectId);
         setProjectDetails(res);
-      } catch (error) {
-        console.error(
-          "fetchProjectDetails: Failed to fetch project details for projectId:",
-          projectId,
-          "Error:",
-          error
-        );
-        toast.error("Error while fetching project details. Try again later.");
+      } catch {
+        toast.error("Error while fetching project details.");
       } finally {
         setIsLoading(false);
       }
     };
-    fetchProjectDetails();
+    if (projectId) {
+      fetchProjectDetails();
+    }
   }, [projectId]);
 
   const tabsByService: { [key in ProjectType]: Tab[] } = {
@@ -204,7 +135,7 @@ const DashboardComponent = () => {
       {
         name: "Email Insights",
         value: "email-insights",
-        component: <EmailInsightsTab userId={user.id} />,
+        component: <EmailInsightsTab userId={user.id} projectId={projectId} />,
       },
       {
         name: "Security Metrics",
@@ -255,7 +186,7 @@ const DashboardComponent = () => {
       {
         name: "Email Insights",
         value: "email-insights",
-        component: <EmailInsightsTab userId={user.id} />,
+        component: <EmailInsightsTab userId={user.id} projectId={projectId} />,
       },
       {
         name: "Security Metrics",
@@ -286,20 +217,14 @@ const DashboardComponent = () => {
   };
 
   const tabsValue = projectDetails
-    ? tabsByService[projectDetails.service as ProjectType] ||
+    ? tabsByService[projectDetails.type as ProjectType] ||
       tabsByService[ProjectType.ALL_SERVICES]
     : [];
-
-  const hasGmail = gmailSettings?.status === 200 && !!gmailSettings?.res;
 
   const handleGmailConnect = async () => {
     try {
       if (!user.id || !projectId) {
-        console.error("handleGmailConnect: Missing userId or projectId", {
-          userId: user.id,
-          projectId,
-        });
-        throw new Error("User ID or Project ID is missing");
+        throw new Error("Missing userId or projectId");
       }
       const redirectUrl = new URL(
         "/api/auth/gmail",
@@ -308,18 +233,27 @@ const DashboardComponent = () => {
       redirectUrl.searchParams.set("userId", user.id);
       redirectUrl.searchParams.set("projectId", projectId);
       window.location.href = redirectUrl.toString();
-    } catch (error: any) {
-      console.error(
-        "handleGmailConnect: Error initiating Gmail OAuth for userId:",
-        user.id,
-        "Error:",
-        error.message
-      );
-      toast.error("Failed to initiate Gmail connection. Please try again.");
+    } catch {
+      toast.error("Failed to initiate Gmail connection.");
     }
   };
 
-  if (isLoading || isLoadingSettings || (hasGmail && isLoadingInsights)) {
+  const handleRefresh = async () => {
+    try {
+      await queryClient.invalidateQueries({
+        queryKey: ["emailInsights", user.id, projectId],
+      });
+      await queryClient.fetchQuery({
+        queryKey: ["emailInsights", user.id, projectId],
+        queryFn: () => fetchGmailEmails(user.id, projectId, true),
+      });
+      toast.success("Email data refreshed successfully!");
+    } catch {
+      toast.error("Failed to refresh email data.");
+    }
+  };
+
+  if (isLoading || isLoadingSettings) {
     return (
       <div className="w-full h-full flex flex-col justify-center items-center min-h-[400px]">
         <div className="flex flex-col items-center space-y-4">
@@ -340,48 +274,40 @@ const DashboardComponent = () => {
     );
   }
 
-  if (!hasGmail) {
+  if (
+    gmailSettings?.status !== 200 ||
+    !gmailSettings?.res ||
+    emailInsights?.emailCount === 0
+  ) {
     return (
       <div className="w-full h-full flex flex-col justify-center items-center min-h-[500px] p-8">
         <div className="max-w-md text-center space-y-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mb-6">
-            <Mail className="w-12 h-12 text-purple-600" />
-          </div>
-
           <div className="space-y-3">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Connect Your Email
+            <h2 className="text-2xl font-bold text-primary">
+              {gmailSettings?.status === 200
+                ? "No Emails Found"
+                : "Connect Your Email"}
             </h2>
-            <p className="text-gray-600 leading-relaxed">
-              Get personalized insights about your email security. We'll help
-              you identify threats, track email patterns, and keep your
-              communications safe.
+            <p className="text-muted-foreground leading-relaxed">
+              {gmailSettings?.status === 200
+                ? "No emails were found in your Gmail account. Try refreshing to fetch new data."
+                : "Get personalized insights about your email security. We'll help you identify threats, track email patterns, and keep your communications safe."}
             </p>
           </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-            <div className="flex items-start space-x-2">
-              <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="text-blue-800">
-                <p className="font-medium">What we analyze:</p>
-                <ul className="mt-1 space-y-1 text-blue-700">
-                  <li>• Suspicious emails and phishing attempts</li>
-                  <li>• Email activity patterns</li>
-                  <li>• Security threat trends</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <button
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium flex items-center justify-center space-x-2"
-            onClick={handleGmailConnect}
+          <Button
+            className="rounded-xl flex gap-2 items-center hover:cursor-pointer px-4 py-2 border border-border bg-primary/10 backdrop-blur-sm text-sm font-normal text-primary hover:bg-primary-20"
+            onClick={
+              gmailSettings?.status === 200 ? handleRefresh : handleGmailConnect
+            }
           >
             <Globe className="w-5 h-5" />
-            <span>Connect Gmail Account</span>
-          </button>
-
-          <p className="text-xs text-gray-500">
+            <span>
+              {gmailSettings?.status === 200
+                ? "Refresh Email Data"
+                : "Connect Gmail Account"}
+            </span>
+          </Button>
+          <p className="text-xs text-muted-foreground">
             We use secure OAuth to connect your account. Your data is encrypted
             and never shared.
           </p>

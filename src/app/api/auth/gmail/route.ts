@@ -1,3 +1,4 @@
+// /app/api/auth/gmail.ts
 import { NextRequest, NextResponse } from "next/server";
 import { sign } from "jsonwebtoken";
 
@@ -7,6 +8,7 @@ export async function GET(req: NextRequest) {
   const projectId = searchParams.get("projectId");
 
   if (!userId || !projectId) {
+    console.error("Missing userId or projectId:", { userId, projectId });
     return NextResponse.json(
       { message: "Missing userId or projectId" },
       { status: 400 }
@@ -14,6 +16,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.error("Google OAuth credentials not configured");
     return NextResponse.json(
       { message: "Google OAuth credentials not configured" },
       { status: 500 }
@@ -41,5 +44,6 @@ export async function GET(req: NextRequest) {
   redirectUrl.searchParams.set("access_type", "offline");
   redirectUrl.searchParams.set("prompt", "consent");
 
+  console.log("Redirecting to Google OAuth:", redirectUrl.toString());
   return NextResponse.redirect(redirectUrl.toString());
 }

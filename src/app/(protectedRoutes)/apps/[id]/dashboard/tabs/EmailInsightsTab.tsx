@@ -1,6 +1,7 @@
+// /app/(protectedRoutes)/apps/[id]/tabs/EmailInsightsTab.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -30,24 +31,54 @@ import {
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchGmailEmails } from "@/app/(protectedRoutes)/apps/[id]/dashboard/actions";
+import { fetchGmailEmails, fetchEmailBody } from "@/app/actions/gmail/action";
+
+interface Email {
+  id: string;
+  threadId: string;
+  snippet: string;
+  from: string;
+  to: string;
+  subject: string;
+  date: string;
+  labels: string[];
+}
 
 interface EmailInsights {
   hasGmail: boolean;
   emailCount: number;
   threatCounts: { type: string; count: number }[];
   emailActivity: { date: string; count: number }[];
+  emails: Email[];
 }
 
 interface EmailInsightsTabProps {
   userId: string;
+  projectId: string;
 }
 
-const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
-  const params = useParams();
-  const projectId = params.id as string;
+const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({
+  userId,
+  projectId,
+}) => {
   const queryClient = useQueryClient();
   const { theme } = useTheme();
+  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
+  const [isLoadingBody, setIsLoadingBody] = useState(false);
+
+  const { data: cachedEmails, isLoading } = useQuery<EmailInsights>({
+    queryKey: ["emailInsights", userId, projectId],
+    queryFn: () => fetchGmailEmails(userId, projectId),
+    enabled: !!userId && !!projectId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const { data: emailBody, isLoading: isLoadingEmailBody } = useQuery<string>({
+    queryKey: ["emailBody", userId, selectedEmailId],
+    queryFn: () => fetchEmailBody(userId, selectedEmailId!),
+    enabled: !!selectedEmailId,
+  });
 
   const chartColors = {
     primary: "#8b5cf6",
@@ -58,49 +89,18 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
     muted: "#6b7280",
   };
 
-  const threatColors = ["#ef4444", "#f59e0b", "#8b5cf6", "#3b82f6", "#10b981"];
-
-  // Query for email insights
-  const {
-    data: insights,
-    isLoading: isLoadingInsights,
-    error: insightsError,
-  } = useQuery({
-    queryKey: ["emailInsights", userId, projectId],
-    queryFn: () => fetchGmailEmails(userId, projectId),
-    enabled: !!userId && !!projectId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-
-  // Handle refresh
   const handleRefresh = async () => {
     try {
       await queryClient.invalidateQueries({
         queryKey: ["emailInsights", userId, projectId],
       });
-      const data = await queryClient.fetchQuery({
+      await queryClient.fetchQuery({
         queryKey: ["emailInsights", userId, projectId],
         queryFn: () => fetchGmailEmails(userId, projectId, true),
       });
       toast.success("Dashboard refreshed successfully!");
-    } catch (error: any) {
-      console.error(
-        "handleRefresh: Error refreshing email insights for userId:",
-        userId,
-        "projectId:",
-        projectId,
-        "Error:",
-        error.message
-      );
-      const message = error.message.includes("network")
-        ? "Network error. Please check your connection and try again."
-        : error.message.includes("401") || error.message.includes("403")
-        ? "Gmail authentication expired. Please reconnect your account."
-        : "Failed to refresh dashboard. Please try again.";
-      toast.error(message);
+    } catch {
+      toast.error("Failed to refresh dashboard.");
     }
   };
 
@@ -141,11 +141,12 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
     );
   };
 
-  const totalThreats =
-    insights?.threatCounts.reduce((sum, threat) => sum + threat.count, 0) || 0;
-  const safeEmails = (insights?.emailCount || 0) - totalThreats;
+  const handleEmailClick = (emailId: string) => {
+    setSelectedEmailId(emailId);
+    setIsLoadingBody(true);
+  };
 
-  if (isLoadingInsights) {
+  if (isLoading || !cachedEmails || !cachedEmails.hasGmail) {
     return (
       <div className="w-full h-full flex flex-col justify-center items-center min-h-[400px]">
         <div className="flex flex-col items-center space-y-4">
@@ -166,6 +167,12 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
     );
   }
 
+  const totalThreats = cachedEmails.threatCounts.reduce(
+    (sum, threat) => sum + threat.count,
+    0
+  );
+  const safeEmails = cachedEmails.emailCount - totalThreats;
+
   return (
     <div className="p-6 space-y-6 min-h-screen">
       <div className="flex items-center justify-between">
@@ -180,13 +187,10 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
         <div className="flex items-center space-x-3">
           <Button
             onClick={handleRefresh}
-            disabled={isLoadingInsights}
             variant="default"
-            className="flex items-center space-x-2 px-4 py-2 transition-colors disabled:opacity-50"
+            className="flex items-center space-x-2 px-4 py-2 transition-colors"
           >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoadingInsights ? "animate-spin" : ""}`}
-            />
+            <RefreshCw className="w-4 h-4" />
             <span className="text-sm font-medium">Refresh</span>
           </Button>
           <Button
@@ -198,7 +202,6 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
           </Button>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-card border-0 shadow-sm">
           <CardHeader className="pb-3">
@@ -211,12 +214,11 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="text-2xl font-bold text-primary">
-              {insights?.emailCount?.toLocaleString() ?? 0}
+              {cachedEmails.emailCount.toLocaleString()}
             </div>
             <p className="text-sm text-purple-600 mt-1">Processed this month</p>
           </CardContent>
         </Card>
-
         <Card className="bg-card border-0 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -231,12 +233,11 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
               {safeEmails.toLocaleString()}
             </div>
             <p className="text-sm text-green-600 mt-1">
-              {((safeEmails / (insights?.emailCount || 1)) * 100).toFixed(1)}%
-              of total
+              {((safeEmails / (cachedEmails.emailCount || 1)) * 100).toFixed(1)}
+              % of total
             </p>
           </CardContent>
         </Card>
-
         <Card className="bg-card border-0 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -251,12 +252,13 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
               {totalThreats}
             </div>
             <p className="text-sm text-red-600 mt-1">
-              {((totalThreats / (insights?.emailCount || 1)) * 100).toFixed(1)}%
-              of total
+              {((totalThreats / (cachedEmails.emailCount || 1)) * 100).toFixed(
+                1
+              )}
+              % of total
             </p>
           </CardContent>
         </Card>
-
         <Card className="bg-card border-0 shadow-sm">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -268,13 +270,13 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="text-2xl font-bold text-primary">
-              {((safeEmails / (insights?.emailCount || 1)) * 100).toFixed(0)}%
+              {((safeEmails / (cachedEmails.emailCount || 1)) * 100).toFixed(0)}
+              %
             </div>
             <p className="text-sm text-blue-600 mt-1">Excellent protection</p>
           </CardContent>
         </Card>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-card border-0 shadow-sm">
           <CardHeader>
@@ -291,11 +293,11 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
             </div>
           </CardHeader>
           <CardContent>
-            {insights?.threatCounts.length ? (
+            {cachedEmails.threatCounts.length ? (
               <div className="space-y-4">
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart
-                    data={insights.threatCounts}
+                    data={cachedEmails.threatCounts}
                     margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
                   >
                     <CartesianGrid
@@ -330,9 +332,8 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
                     />
                   </BarChart>
                 </ResponsiveContainer>
-
                 <div className="space-y-2">
-                  {insights.threatCounts.map((threat, index) => {
+                  {cachedEmails.threatCounts.map((threat) => {
                     const severity = getThreatSeverity(threat.type);
                     const Icon = severity.icon;
                     return (
@@ -370,7 +371,6 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
             )}
           </CardContent>
         </Card>
-
         <Card className="bg-card border-0 shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -386,10 +386,10 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
             </div>
           </CardHeader>
           <CardContent>
-            {insights?.emailActivity.length ? (
+            {cachedEmails.emailActivity.length ? (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart
-                  data={insights.emailActivity}
+                  data={cachedEmails.emailActivity}
                   margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
                 >
                   <CartesianGrid
@@ -452,7 +452,6 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
           </CardContent>
         </Card>
       </div>
-
       <Card className="bg-card">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-primary flex items-center space-x-2">
@@ -481,6 +480,56 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({ userId }) => {
               </ul>
             </div>
           </div>
+        </CardContent>
+      </Card>
+      <Card className="bg-card">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold text-primary flex items-center space-x-2">
+            <Mail className="w-5 h-5 text-purple-600" />
+            <span>Recent Emails</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {cachedEmails.emails.length > 0 ? (
+            <div className="space-y-4">
+              {cachedEmails.emails.map((email) => (
+                <div
+                  key={email.id}
+                  className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleEmailClick(email.id)}
+                >
+                  <div className="flex justify-between">
+                    <div>
+                      <p className="font-medium">{email.from}</p>
+                      <p className="text-sm text-gray-600">{email.subject}</p>
+                      <p className="text-sm text-gray-500">{email.snippet}</p>
+                    </div>
+                    <p className="text-sm text-gray-400">{email.date}</p>
+                  </div>
+                  {selectedEmailId === email.id && (
+                    <div className="mt-4">
+                      {isLoadingEmailBody || isLoadingBody ? (
+                        <p className="text-muted-foreground">
+                          Loading email content...
+                        </p>
+                      ) : (
+                        <p className="text-sm">
+                          {emailBody || "No content available"}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {cachedEmails.emails.length >= 100 && (
+                <p className="text-center text-muted-foreground">
+                  Fetching more emails...
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-gray-500">No emails available.</p>
+          )}
         </CardContent>
       </Card>
     </div>

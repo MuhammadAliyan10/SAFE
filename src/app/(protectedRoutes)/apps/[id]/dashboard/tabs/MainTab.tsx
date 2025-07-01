@@ -24,7 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchGmailEmails } from "@/app/(protectedRoutes)/apps/[id]/dashboard/actions";
+import { fetchGmailEmails } from "@/app/actions/gmail/action";
 
 interface EmailInsights {
   hasGmail: boolean;
