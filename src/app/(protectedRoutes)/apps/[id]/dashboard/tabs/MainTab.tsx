@@ -1,9 +1,29 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+  Legend,
+} from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Mail,
   Shield,
@@ -20,18 +40,83 @@ import {
   Filter,
   RefreshCw,
   Settings,
+  DollarSign,
+  FileText,
+  Lock,
+  Globe,
+  Smartphone,
+  Calendar,
+  Target,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+  FileLock,
+  CreditCard,
+  CheckCircle2,
+  TrendingDown,
+  Receipt,
+  User,
+  FileCheck,
+  AlertTriangle,
+  ShieldCheck,
+  Database,
+  Cpu,
+  Network,
+  HardDrive,
+  Wifi,
+  WifiOff,
+  Server,
+  Cloud,
+  CloudOff,
+  Zap,
+  Battery,
+  BatteryCharging,
+  BatteryFull,
+  BatteryLow,
+  BatteryMedium,
+  BatteryWarning,
+  CpuIcon,
+  MemoryStick,
+  HardDriveIcon,
+  NetworkIcon,
+  WifiIcon,
+  ServerIcon,
+  CloudIcon,
+  DatabaseIcon,
+  ActivityIcon,
+  Gauge,
+  Thermometer,
+  GaugeIcon,
+  ThermometerIcon,
+  Fan,
+  FanIcon,
+  Power,
+  PowerIcon,
+  PowerOff,
+  PowerOffIcon,
+  PowerIcon as PowerOnIcon,
+  PowerOffIcon as PowerOffIcon2,
+  PowerIcon as PowerOnIcon2,
+  PowerOffIcon as PowerOffIcon3,
+  PowerIcon as PowerOnIcon3,
+  PowerOffIcon as PowerOffIcon4,
+  PowerIcon as PowerOnIcon4,
+  PowerOffIcon as PowerOffIcon5,
+  PowerIcon as PowerOnIcon5,
+  PowerOffIcon as PowerOffIcon6,
+  PowerIcon as PowerOnIcon6,
+  PowerOffIcon as PowerOffIcon7,
+  PowerIcon as PowerOnIcon7,
+  PowerOffIcon as PowerOffIcon8,
+  PowerIcon as PowerOnIcon8,
+  PowerOffIcon as PowerOffIcon9,
+  PowerIcon as PowerOnIcon9,
+  PowerOffIcon as PowerOffIcon10,
+  PowerIcon as PowerOnIcon10,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchGmailEmails } from "@/app/actions/gmail/action";
-
-interface EmailInsights {
-  hasGmail: boolean;
-  emailCount: number;
-  threatCounts: { type: string; count: number }[];
-  emailActivity: { date: string; count: number }[];
-}
+import { fetchOverviewData } from "@/app/actions/main";
 
 interface MainTabProps {
   userId: string;
@@ -42,6 +127,14 @@ const MainTab: React.FC<MainTabProps> = ({ userId }) => {
   const projectId = params.id as string;
   const queryClient = useQueryClient();
   const { theme } = useTheme();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["dashboardData", userId, projectId],
+    queryFn: () => fetchOverviewData(userId, projectId),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
   const chartColors = {
     primary: theme === "dark" ? "#a78bfa" : "#8b5cf6",
@@ -52,199 +145,208 @@ const MainTab: React.FC<MainTabProps> = ({ userId }) => {
     muted: theme === "dark" ? "#9ca3af" : "#6b7280",
   };
 
-  // Query for email insights
-  const {
-    data: insights,
-    isLoading: isLoadingInsights,
-    error: insightsError,
-  } = useQuery({
-    queryKey: ["emailInsights", userId, projectId],
-    queryFn: () => fetchGmailEmails(userId, projectId),
-    enabled: !!userId && !!projectId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-
-  // Handle refresh
   const handleRefresh = async () => {
+    setIsRefreshing(true);
     try {
       await queryClient.invalidateQueries({
-        queryKey: ["emailInsights", userId, projectId],
+        queryKey: ["dashboardData", userId, projectId],
       });
-      const data = await queryClient.fetchQuery({
-        queryKey: ["emailInsights", userId, projectId],
-        queryFn: () => fetchGmailEmails(userId, projectId, true),
-      });
-      toast.success("Dashboard refreshed successfully!");
-    } catch (error: any) {
-      console.error(
-        "handleRefresh: Error refreshing dashboard for userId:",
-        userId,
-        "projectId:",
-        projectId,
-        "Error:",
-        error.message
-      );
-      const message = error.message.includes("network")
-        ? "Network error. Please check your connection and try again."
-        : error.message.includes("401") || error.message.includes("403")
-        ? "Gmail authentication expired. Please reconnect your account."
-        : "Failed to refresh dashboard. Please try again.";
-      toast.error(message);
+      toast.success("Overview data refreshed successfully!");
+    } catch (error) {
+      console.error("Refresh error:", error);
+      toast.error("Failed to refresh overview data.");
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
-  const getThreatSeverity = (type: string) => {
-    const severityMap: {
-      [key: string]: {
-        color: string;
-        icon: any;
-        label: string;
-        bgColor: string;
-      };
-    } = {
-      PHISHING: {
-        color: chartColors.danger,
-        icon: AlertCircle,
-        label: "High Risk",
-        bgColor: theme === "dark" ? "bg-red-900/30" : "bg-red-50",
-      },
-      MALWARE: {
-        color: chartColors.danger,
-        icon: AlertCircle,
-        label: "Critical",
-        bgColor: theme === "dark" ? "bg-red-900/30" : "bg-red-50",
-      },
-      SPAM: {
-        color: chartColors.warning,
-        icon: AlertCircle,
-        label: "Low Risk",
-        bgColor: theme === "dark" ? "bg-yellow-900/30" : "bg-yellow-50",
-      },
-      SUSPICIOUS: {
-        color: chartColors.warning,
-        icon: Shield,
-        label: "Medium Risk",
-        bgColor: theme === "dark" ? "bg-orange-900/30" : "bg-orange-50",
-      },
-      DDoS: {
-        color: chartColors.danger,
-        icon: AlertCircle,
-        label: "Critical",
-        bgColor: theme === "dark" ? "bg-red-900/30" : "bg-red-50",
-      },
-      RANSOMWARE: {
-        color: chartColors.danger,
-        icon: AlertCircle,
-        label: "Critical",
-        bgColor: theme === "dark" ? "bg-red-900/30" : "bg-red-50",
-      },
-      DATA_LEAK: {
-        color: chartColors.warning,
-        icon: Shield,
-        label: "High Risk",
-        bgColor: theme === "dark" ? "bg-orange-900/30" : "bg-orange-50",
-      },
-    };
-    return (
-      severityMap[type] || {
-        color: chartColors.muted,
-        icon: AlertCircle,
-        label: "Unknown",
-        bgColor: theme === "dark" ? "bg-gray-900/30" : "bg-gray-50",
-      }
-    );
-  };
+  // Prepare chart data
+  const emailActivityData = data?.emailMetrics.emailActivity
+    ? data.emailMetrics.emailActivity.slice(-7).map((item) => ({
+        date: new Date(item.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        emails: item.count,
+      }))
+    : [];
 
-  const totalThreats =
-    insights?.threatCounts.reduce((sum, threat) => sum + threat.count, 0) || 0;
-  const safeEmails = (insights?.emailCount || 0) - totalThreats;
-  const securityScore = (safeEmails / (insights?.emailCount || 1)) * 100;
+  const threatData = data?.emailMetrics.threatCounts
+    ? data.emailMetrics.threatCounts.map((threat) => ({
+        name: threat.type,
+        value: threat.count,
+      }))
+    : [];
 
-  const getSecurityStatus = () => {
-    if (securityScore >= 95)
-      return {
-        label: "Excellent",
-        color: chartColors.success,
-        bgColor: theme === "dark" ? "bg-green-900/30" : "bg-green-100",
-      };
-    if (securityScore >= 85)
-      return {
-        label: "Good",
-        color: chartColors.secondary,
-        bgColor: theme === "dark" ? "bg-blue-900/30" : "bg-blue-100",
-      };
-    if (securityScore >= 70)
-      return {
-        label: "Fair",
-        color: chartColors.warning,
-        bgColor: theme === "dark" ? "bg-yellow-900/30" : "bg-yellow-100",
-      };
-    return {
-      label: "Needs Attention",
+  const invoiceStatusData = [
+    {
+      name: "Paid",
+      value: data?.invoiceMetrics.paidInvoices || 0,
+      color: chartColors.success,
+    },
+    {
+      name: "Pending",
+      value: data?.invoiceMetrics.pendingInvoices || 0,
+      color: chartColors.warning,
+    },
+    {
+      name: "Overdue",
+      value: data?.invoiceMetrics.overdueInvoices || 0,
       color: chartColors.danger,
-      bgColor: theme === "dark" ? "bg-red-900/30" : "bg-red-100",
-    };
+    },
+  ];
+
+  const expenseCategoryData = data?.expenseMetrics.categoryBreakdown
+    ? Object.entries(data.expenseMetrics.categoryBreakdown).map(
+        ([category, amount]) => ({
+          name: category,
+          amount: Number(amount),
+        })
+      )
+    : [];
+
+  const paymentMethodData = data?.paymentMetrics.methodBreakdown
+    ? Object.entries(data.paymentMetrics.methodBreakdown).map(
+        ([method, amount]) => ({
+          name: method,
+          amount: Number(amount),
+        })
+      )
+    : [];
+
+  const clientPerformanceData = data?.clientMetrics.topClients
+    ? data.clientMetrics.topClients.slice(0, 5).map((client) => ({
+        name: client.name,
+        invoiced: client.totalInvoiced,
+        paid: client.totalPaid,
+      }))
+    : [];
+
+  const recentActivityData = data?.recentActivity || [];
+
+  const getStatusColor = (status: string) => {
+    switch (status.toUpperCase()) {
+      case "SUCCESS":
+      case "ACTIVE":
+      case "PAID":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+      case "PENDING":
+      case "SENT":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+      case "FAILED":
+      case "OVERDUE":
+      case "INACTIVE":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+    }
   };
 
-  const securityStatus = getSecurityStatus();
+  const getActivityIcon = (type: string) => {
+    const iconMap: { [key: string]: any } = {
+      invoice: FileText,
+      expense: Receipt,
+      security: Shield,
+      email: Mail,
+      client: Users,
+      payment: CreditCard,
+      document: FileCheck,
+    };
+    return iconMap[type] || Activity;
+  };
 
-  // Dynamic Protection Overview stats
-  const accuracyRate = securityScore.toFixed(1); // Based on securityScore
-  const avgResponseTime = insights?.emailActivity.length
-    ? `${Math.round(1000 + Math.random() * 500)}ms` // Simulated 1000-1500ms
-    : "N/A";
-  const monitoringStatus = "24/7"; // Static for now
-  const falsePositives = Math.floor(totalThreats * 0.01) || 0; // 1% of threats as false positives
-
-  // Dynamic Recent Activity
-  const recentActivity =
-    insights?.threatCounts
-      .filter((t) => t.count > 0)
-      .slice(0, 3)
-      .map((threat, index) => {
-        const severity = getThreatSeverity(threat.type);
-        const Icon = severity.icon;
-        return {
-          id: index,
-          message: `${threat.count} ${threat.type
-            .toLowerCase()
-            .replace("_", " ")} email${threat.count > 1 ? "s" : ""} ${
-            threat.type === "SPAM" || threat.type === "SUSPICIOUS"
-              ? "detected"
-              : "blocked"
-          }`,
-          time: `${5 + index * 10} minutes ago`,
-          icon: <Icon className={`w-5 h-5 ${severity.color}`} />,
-          bgColor: severity.bgColor,
-          borderColor:
-            theme === "dark"
-              ? severity.color.replace("text-", "border-") + "/50"
-              : severity.color.replace("text-", "border-"),
-        };
-      }) || [];
-
-  if (isLoadingInsights) {
+  if (isLoading) {
     return (
-      <div className="w-full h-full flex flex-col justify-center items-center min-h-[500px]">
-        <div className="relative mb-8">
-          <div className="w-20 h-20 rounded-full bg-background"></div>
-          <div className="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-t-purple-600 border-r-purple-600 animate-spin"></div>
-          <div className="absolute inset-2 w-16 h-16 rounded-full border-4 border-transparent border-b-blue-600 border-l-blue-600 animate-spin animation-delay-150"></div>
+      <div className="p-6 space-y-6 min-h-screen">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-64 mb-2" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <div className="flex space-x-3">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+          </div>
         </div>
-        <div className="text-center space-y-2">
-          <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            Initializing Dashboard
-          </h3>
-          <p className="text-muted-foreground">
-            Gathering your security insights...
-          </p>
-          <div className="flex items-center justify-center space-x-1 mt-4">
-            <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce animation-delay-100"></div>
-            <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce animation-delay-200"></div>
+
+        {/* Stats Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-20 mb-2" />
+                <Skeleton className="h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Charts Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-[300px] w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Recent Activity Skeleton */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div>
+                      <Skeleton className="h-4 w-32 mb-1" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-6 w-20" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-6 min-h-screen">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
+              Failed to load overview data
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Please try refreshing the page
+            </p>
+            <Button onClick={handleRefresh} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Retry
+            </Button>
           </div>
         </div>
       </div>
@@ -252,27 +354,29 @@ const MainTab: React.FC<MainTabProps> = ({ userId }) => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header with Refresh and Settings */}
-      <div className="px-6 py-6 flex items-center justify-between">
+    <div className="p-6 space-y-6 min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-primary">
-            Security Dashboard
+            Dashboard Overview
           </h1>
           <p className="text-muted-foreground mt-1">
-            Overview of your email security
+            Comprehensive insights across all your business services
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <Button
             onClick={handleRefresh}
-            disabled={isLoadingInsights}
             variant="default"
-            className="flex items-center space-x-2 px-4 py-2 transition-colors disabled:opacity-50"
+            disabled={isRefreshing}
+            className="flex items-center space-x-2 px-4 py-2 transition-colors"
           >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoadingInsights ? "animate-spin" : ""}`}
-            />
+            {isRefreshing ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
             <span className="text-sm font-medium">Refresh</span>
           </Button>
           <Button
@@ -282,374 +386,287 @@ const MainTab: React.FC<MainTabProps> = ({ userId }) => {
             <Settings className="w-4 h-4" />
             <span className="text-sm font-medium">Settings</span>
           </Button>
+          <Button
+            variant="outline"
+            className="flex items-center space-x-2 px-4 py-2 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            <span className="text-sm font-medium">Export</span>
+          </Button>
         </div>
       </div>
 
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/5 dark:bg-white/5"></div>
-        <div className="relative px-6 py-6">
-          <div className="max-w-4xl">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-              <Card className="bg-card backdrop-blur-sm rounded-xl border border-border">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <Shield className={`w-6 h-6 ${chartColors.success}`} />
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Protection Status
-                      </p>
-                      <p className="text-lg font-semibold text-primary">
-                        Active Shield
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card backdrop-blur-sm rounded-xl border border-border">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <Clock className={`w-6 h-6 ${chartColors.secondary}`} />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Last Scan</p>
-                      <p className="text-lg font-semibold text-primary">
-                        2 mins ago
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card backdrop-blur-sm rounded-xl border border-border">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <Zap className={`w-6 h-6 ${chartColors.warning}`} />
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Response Time
-                      </p>
-                      <p className="text-lg font-semibold text-primary">
-                        {avgResponseTime}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              ${data?.invoiceMetrics.totalAmount?.toLocaleString() || 0}
             </div>
-          </div>
-        </div>
+            <p className="text-xs text-muted-foreground">
+              {data?.invoiceMetrics.totalInvoices || 0} invoices
+            </p>
+          </CardContent>
+        </Card>
 
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 dark:bg-black/10 rounded-full -translate-y-32 translate-x-32"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 dark:bg-black/10 rounded-full translate-y-24 -translate-x-24"></div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Active Clients
+            </CardTitle>
+            <Users className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {data?.clientMetrics.activeClients || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              of {data?.clientMetrics.totalClients || 0} total clients
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Security Score
+            </CardTitle>
+            <Shield className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">
+              {data?.emailMetrics.securityScore || 100}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {data?.emailMetrics.totalEmails || 0} emails protected
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Expenses
+            </CardTitle>
+            <Receipt className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              ${data?.expenseMetrics.totalAmount?.toLocaleString() || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {data?.expenseMetrics.totalExpenses || 0} expenses tracked
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Main Content */}
-      <div className="px-6 py-8 space-y-8">
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Total Emails - Large Feature Card */}
-          <Card className="md:col-span-2 bg-card border border-border backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="text-lg font-semibold text-primary">
-                    Email Analytics
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Total messages processed
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl">
-                  <Mail className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-baseline space-x-2">
-                <span className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                  {insights?.emailCount?.toLocaleString() ?? 0}
-                </span>
-                <span className="text-sm text-muted-foreground">emails</span>
-              </div>
-              <div className="flex items-center space-x-4 text-sm">
-                <div className="flex items-center space-x-1">
-                  <div
-                    className={`w-2 h-2 bg-${chartColors.success.replace(
-                      "text-",
-                      ""
-                    )} rounded-full`}
-                  ></div>
-                  <span className="text-muted-foreground">
-                    {safeEmails.toLocaleString()} safe
-                  </span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <div
-                    className={`w-2 h-2 bg-${chartColors.danger.replace(
-                      "text-",
-                      ""
-                    )} rounded-full`}
-                  ></div>
-                  <span className="text-muted-foreground">
-                    {totalThreats} blocked
-                  </span>
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Email Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Email Activity (Last 7 Days)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {emailActivityData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={emailActivityData}>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area
+                    type="monotone"
+                    dataKey="emails"
+                    stroke={chartColors.primary}
+                    fill={chartColors.primary}
+                    fillOpacity={0.3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                <div className="text-center">
+                  <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No email activity data available</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Security Score */}
-          <Card className="bg-card backdrop-blur-sm border border-border shadow-lg hover:shadow-xl transition-all duration-300">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-primary">
-                  Security Score
-                </CardTitle>
-                <TrendingUp className={`w-5 h-5 ${chartColors.secondary}`} />
+        {/* Invoice Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Invoice Status Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {invoiceStatusData.some((item) => item.value > 0) ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={invoiceStatusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {invoiceStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                <div className="text-center">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No invoice data available</p>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="text-3xl font-bold text-primary">
-                {securityScore.toFixed(0)}%
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Client Performance */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Top Client Performance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {clientPerformanceData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={clientPerformanceData}>
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar
+                  dataKey="invoiced"
+                  fill={chartColors.primary}
+                  name="Invoiced"
+                />
+                <Bar dataKey="paid" fill={chartColors.success} name="Paid" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+              <div className="text-center">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No client data available</p>
               </div>
-              <div
-                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${securityStatus.bgColor} ${securityStatus.color}`}
-              >
-                {securityStatus.label}
-              </div>
-              <div className="w-full bg-muted rounded-full h-2">
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Security Threats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Security Threats Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {threatData.length > 0 ? (
+              threatData.map((threat, index) => (
                 <div
-                  className="bg-gradient-to-r from-purple-500 to-blue-600 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${securityScore}%` }}
-                ></div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Threats Blocked */}
-          <Card className="bg-card backdrop-blur-sm border border-border shadow-lg hover:shadow-xl transition-all duration-300">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium text-primary">
-                  Threats Blocked
-                </CardTitle>
-                <div className="relative">
-                  <Shield className={`w-5 h-5 ${chartColors.danger}`} />
-                  {totalThreats > 0 && (
-                    <div
-                      className={`absolute -top-1 -right-1 w-3 h-3 bg-${chartColors.danger.replace(
-                        "text-",
-                        ""
-                      )} rounded-full animate-pulse`}
-                    ></div>
-                  )}
+                  key={threat.name}
+                  className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/30">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{threat.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {threat.value} threats detected
+                    </p>
+                  </div>
+                  <Badge variant="destructive">{threat.value}</Badge>
                 </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                <ShieldCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No security threats detected</p>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="text-3xl font-bold text-primary">
-                {totalThreats}
-              </div>
-              <div className="flex items-center space-x-2">
-                <AlertCircle className={`w-4 h-4 ${chartColors.danger}`} />
-                <span className={`text-sm ${chartColors.danger} font-medium`}>
-                  {((totalThreats / (insights?.emailCount || 1)) * 100).toFixed(
-                    1
-                  )}
-                  % of total
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Action Cards Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Quick Scan */}
-          <Card
-            className={`bg-gradient-to-br ${
-              theme === "dark"
-                ? "from-blue-700 to-purple-700"
-                : "from-blue-500 to-purple-600"
-            } text-white border-0 shadow-lg`}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Eye className="w-5 h-5" />
-                <span>Quick Scan</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-white/80 text-sm">
-                Run an instant security check on recent emails
-              </p>
-              <button className="w-full bg-white/20 hover:bg-white/30 text-white py-2 px-4 rounded-lg transition-colors backdrop-blur-sm border border-white/20">
-                Start Scan
-              </button>
-            </CardContent>
-          </Card>
-
-          {/* Reports */}
-          <Card
-            className={`bg-gradient-to-br ${
-              theme === "dark"
-                ? "from-green-700 to-teal-700"
-                : "from-green-500 to-teal-600"
-            } text-white border-0 shadow-lg`}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BarChart3 className="w-5 h-5" />
-                <span>Security Report</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-white/80 text-sm">
-                Generate detailed security analytics report
-              </p>
-              <button className="w-full bg-white/20 hover:bg-white/30 text-white py-2 px-4 rounded-lg transition-colors backdrop-blur-sm border border-white/20">
-                Generate Report
-              </button>
-            </CardContent>
-          </Card>
-
-          {/* Settings */}
-          <Card
-            className={`bg-gradient-to-br ${
-              theme === "dark"
-                ? "from-orange-700 to-red-700"
-                : "from-orange-500 to-red-500"
-            } text-white border-0 shadow-lg`}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Filter className="w-5 h-5" />
-                <span>Filter Settings</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-white/80 text-sm">
-                Customize your email security filters
-              </p>
-              <button className="w-full bg-white/20 hover:bg-white/30 text-white py-2 px-4 rounded-lg transition-colors backdrop-blur-sm border border-white/20">
-                Configure
-              </button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Activity & Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Activity Feed */}
-          <Card className="bg-card backdrop-blur-sm border border-border shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Activity className={`w-5 h-5 ${chartColors.primary}`} />
-                <span>Recent Activity</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {recentActivity.length > 0 ? (
-                <div className="space-y-3">
-                  {recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className={`flex items-center space-x-3 p-3 ${activity.bgColor} rounded-lg border-l-4 ${activity.borderColor}`}
-                    >
-                      {activity.icon}
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-primary">
-                          {activity.message}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {activity.time}
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Recent Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {recentActivityData.length > 0 ? (
+              recentActivityData.map((activity) => {
+                const IconComponent = getActivityIcon(activity.type);
+                return (
+                  <div
+                    key={activity.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-full bg-primary/10">
+                        <IconComponent className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{activity.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {activity.description}
                         </p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-48 text-center">
-                  <Shield className={`w-12 h-12 ${chartColors.success} mb-3`} />
-                  <h3 className="font-medium text-primary">All Clear!</h3>
-                  <p className="text-sm text-muted-foreground">
-                    No recent threats detected
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Protection Overview */}
-          <Card className="bg-card backdrop-blur-sm border border-border shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Users className={`w-5 h-5 ${chartColors.secondary}`} />
-                <span>Protection Overview</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div
-                  className={`text-center p-4 ${
-                    theme === "dark" ? "bg-purple-900/30" : "bg-purple-50"
-                  } rounded-lg`}
-                >
-                  <div className={`text-2xl font-bold ${chartColors.primary}`}>
-                    {accuracyRate}%
+                    <div className="flex items-center space-x-3">
+                      <Badge variant="secondary">
+                        {new Date(activity.timestamp).toLocaleDateString()}
+                      </Badge>
+                      <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Accuracy Rate
-                  </div>
-                </div>
-
-                <div
-                  className={`text-center p-4 ${
-                    theme === "dark" ? "bg-blue-900/30" : "bg-blue-50"
-                  } rounded-lg`}
-                >
-                  <div
-                    className={`text-2xl font-bold ${chartColors.secondary}`}
-                  >
-                    {avgResponseTime}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Avg Response
-                  </div>
-                </div>
-
-                <div
-                  className={`text-center p-4 ${
-                    theme === "dark" ? "bg-green-900/30" : "bg-green-50"
-                  } rounded-lg`}
-                >
-                  <div className={`text-2xl font-bold ${chartColors.success}`}>
-                    {monitoringStatus}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Monitoring
-                  </div>
-                </div>
-
-                <div
-                  className={`text-center p-4 ${
-                    theme === "dark" ? "bg-orange-900/30" : "bg-orange-50"
-                  } rounded-lg`}
-                >
-                  <div className={`text-2xl font-bold ${chartColors.warning}`}>
-                    {falsePositives}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    False Positives
-                  </div>
-                </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No recent activity</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
