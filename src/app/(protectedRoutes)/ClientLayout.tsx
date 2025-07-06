@@ -79,7 +79,7 @@ const ClientLayout = ({ children, user, session }: LayoutProps) => {
           </div>
 
           {/* Main Content Area */}
-          <main className="flex-1 overflow-y-hidden pt-16 pl-4 pr-4 pb-4">
+          <main className="flex-1 overflow-y-hidden pt-16 pl-4 pr-4 pb-4 ">
             <QueryClientProvider client={queryClient}>
               {children}
             </QueryClientProvider>

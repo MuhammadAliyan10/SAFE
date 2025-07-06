@@ -43,6 +43,8 @@ import {
   FileLock,
   Mail,
   ShieldCheck,
+  GitBranch,
+  Server,
 } from "lucide-react";
 import { useRouter, usePathname, useParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
@@ -647,39 +649,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
       >
         {(isExpanded || isMobile) && (
           <motion.div
-            className="flex items-center gap-3"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 300 }}
+            className="flex items-center gap-3 group"
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
           >
-            <div className="relative">
-              <motion.div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center relative overflow-hidden"
-                animate={{
-                  background: [
-                    "linear-gradient(45deg, #8b5cf6, #3b82f6)",
-                    "linear-gradient(45deg, #3b82f6, #8b5cf6)",
-                    "linear-gradient(45deg, #8b5cf6, #3b82f6)",
-                  ],
-                }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <ShieldCheck className="w-6 h-6 text-white relative z-10" />
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30"
-                  animate={{ x: [-100, 100] }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                />
-              </motion.div>
-              <div className="absolute -inset-2 bg-gradient-to-r from-violet-500 to-blue-500 rounded-2xl opacity-30 blur-lg" />
+            <div className="relative group">
+              <div className="flex items-center justify-center bg-card border border-border rounded-md p-1 transition-all duration-300 ">
+                <Server className="w-5 h-5 text-primary" />
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl dark:font-black bg-gradient-to-r from-white via-violet-200 to-blue-200 bg-clip-text text-transparent">
+
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg font-semibold tracking-wide text-foreground">
                 {projectDetails?.name || "Loading..."}
               </h1>
+              <p className="text-muted-foreground text-xs">
+                {projectId.slice(0, 20)}...
+              </p>
             </div>
           </motion.div>
         )}
@@ -690,8 +676,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
           {(projectDetails
             ? navItemsByService[projectDetails.service as ProjectType] ||
               navItemsByService[ProjectType.ALL_SERVICES]
-            : []
-          ).map((item) => renderNavItem(item))}
+            : Array(13).fill(null)
+          ).map((item, index) =>
+            item ? (
+              renderNavItem(item)
+            ) : (
+              <div
+                key={index}
+                className="h-10 rounded-lg bg-card my-2 mx-2 animate-pulse"
+              ></div>
+            )
+          )}
         </nav>
       </div>
 

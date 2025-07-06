@@ -25,6 +25,7 @@ import {
   Loader2,
   Filter,
   User,
+  Server,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -118,7 +119,7 @@ const services: Service[] = [
     name: "All Services",
     value: "ALL_SERVICES",
     description: "Comprehensive access to all features",
-    icon: <DollarSign className="h-6 w-6" />,
+    icon: <Server className="h-6 w-6" />,
     color: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
   },
 ];
@@ -217,21 +218,6 @@ export default function WelcomePage() {
     return services.find((s) => s.value === serviceValue) || services[0];
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "bg-green-500/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700";
-      case "Completed":
-        return "bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700";
-      case "Paused":
-        return "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700";
-      case "Draft":
-        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700";
-      default:
-        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700";
-    }
-  };
-
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -257,18 +243,31 @@ export default function WelcomePage() {
     );
   }
 
+  const capitalizeTitle = (title: string) => {
+    return title.charAt(0).toUpperCase() + title.slice(1);
+  };
+
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-background via-background to-muted/10 dark:from-background dark:via-background dark:to-muted/5 overflow-y-auto">
+    <div className="flex flex-col min-h-screen w-full items-center justify-center bg-gradient-to-br from-black via-gray-900 to-slate-900 p-4 relative overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-slate-800/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gray-800/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-zinc-800/15 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-20 right-20 w-60 h-60 bg-stone-800/20 rounded-full blur-2xl animate-pulse delay-700"></div>
+        <div className="absolute bottom-20 left-20 w-72 h-72 bg-neutral-800/15 rounded-full blur-2xl animate-pulse delay-300"></div>
+      </div>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         <header className="flex justify-between items-center mb-8">
           <div className="flex items-center space-x-4">
-            <Avatar>
-              <AvatarImage src={user.avatar} alt={user.username} />
-              <AvatarFallback>{user.username?.[0] || "U"}</AvatarFallback>
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={user.profileImage || ""} alt={user.username} />
+              <AvatarFallback>
+                {user.username?.[0].toUpperCase() || "U"}
+              </AvatarFallback>
             </Avatar>
             <div>
               <h2 className="text-3xl font-bold text-primary">
-                {user.username}'s Projects
+                {capitalizeTitle(user.username)}'s Projects
               </h2>
               <p className="text-sm text-muted-foreground">
                 Manage your projects and services
@@ -276,31 +275,10 @@ export default function WelcomePage() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                    className="rounded-full"
-                  >
-                    {isDarkMode ? (
-                      <Sun className="h-5 w-5" />
-                    ) : (
-                      <Moon className="h-5 w-5" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Toggle {isDarkMode ? "light" : "dark"} mode
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
             <motion.div variants={fadeIn} initial="hidden" animate="visible">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                className="rounded-xl flex gap-2 items-center hover:cursor-pointer px-4 py-2 border border-border bg-primary/10 backdrop-blur-sm text-sm font-normal text-primary hover:bg-primary-20"
                 onClick={() => setIsDialogOpen(true)}
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -328,7 +306,7 @@ export default function WelcomePage() {
           variants={fadeIn}
           className="mb-8"
         >
-          <Card className="border-0 shadow-xl bg-background/95 backdrop-blur-md">
+          <Card className="border border-border shadow-xl bg-background/95 backdrop-blur-md">
             <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row gap-4 items-center">
                 <div className="flex-1 relative">
@@ -341,18 +319,6 @@ export default function WelcomePage() {
                   />
                 </div>
                 <div className="flex gap-3">
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-[160px] rounded-xl">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="paused">Paused</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <Select
                     value={filterService}
                     onValueChange={setFilterService}
@@ -415,7 +381,7 @@ export default function WelcomePage() {
                 className="flex-1 flex items-center justify-center"
               >
                 <Card className="border-0 shadow-xl bg-background/95 backdrop-blur-md w-full max-w-lg">
-                  <CardContent className="p-10 text-center">
+                  <CardContent className="p-10 text-center flex flex-col justify-center items-center">
                     <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
                       <FileText className="h-10 w-10 text-muted-foreground" />
                     </div>
@@ -431,7 +397,7 @@ export default function WelcomePage() {
                     </p>
                     <Button
                       onClick={() => setIsDialogOpen(true)}
-                      className="bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl"
+                      className="rounded-xl flex gap-2 items-center hover:cursor-pointer px-4 py-2 border border-border bg-primary/10 backdrop-blur-sm text-sm font-normal text-primary hover:bg-primary-20"
                     >
                       <Plus className="h-5 w-5 mr-2" />
                       Create Project
@@ -462,7 +428,7 @@ export default function WelcomePage() {
                       }}
                       whileTap={{ scale: 0.97 }}
                     >
-                      <Card className="group hover:shadow-2xl transition-all duration-300 border-muted/30 hover:border-primary/50 bg-background/95 backdrop-blur-md">
+                      <Card className="group hover:shadow-2xl transition-all duration-300 border-border hover:border-primary/50 bg-background/95 backdrop-blur-md">
                         <CardHeader className="pb-3">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center space-x-4">
@@ -524,29 +490,7 @@ export default function WelcomePage() {
                           <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
                             {project.description}
                           </p>
-                          <div className="flex items-center justify-between">
-                            <Badge
-                              variant="outline"
-                              className={`${getStatusColor(
-                                project.status
-                              )} font-medium`}
-                            >
-                              {project.status}
-                            </Badge>
-                            {project.progress !== undefined && (
-                              <span className="text-sm font-medium text-muted-foreground">
-                                {project.progress}% Complete
-                              </span>
-                            )}
-                          </div>
-                          {project.progress !== undefined && (
-                            <div className="w-full bg-muted rounded-full h-2">
-                              <div
-                                className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-500"
-                                style={{ width: `${project.progress}%` }}
-                              />
-                            </div>
-                          )}
+
                           {project.assignedUsers && (
                             <div className="flex -space-x-2">
                               {project.assignedUsers.slice(0, 3).map((u) => (
@@ -634,7 +578,7 @@ export default function WelcomePage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[650px] p-0 bg-background rounded-2xl shadow-2xl border-0 bg-gradient-to-br from-background to-muted/10">
+        <DialogContent className="sm:max-w-[650px] p-0 bg-background rounded-2xl shadow-2xl border-border bg-gradient-to-br from-black via-gray-900 to-slate-900">
           <DialogHeader className="p-6 pb-2">
             <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               {selectedService ? "Create New Project" : "Select a Service"}
@@ -669,22 +613,32 @@ export default function WelcomePage() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <button
-                      className="w-full p-6 text-left bg-background border-2 border-muted/20 hover:border-primary/50 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
-                      onClick={() => setSelectedService(service.value)}
-                    >
-                      <div
-                        className={`w-14 h-14 rounded-xl ${service.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
-                      >
-                        {service.icon}
-                      </div>
-                      <h3 className="font-semibold text-lg mb-2">
-                        {service.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
-                        {service.description}
-                      </p>
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          className="w-full p-6 text-left bg-background border-2 border-muted/20 hover:border-primary/50 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
+                          onClick={() => setSelectedService(service.value)}
+                          disabled={service.value !== "ALL_SERVICES"}
+                        >
+                          <div
+                            className={`w-14 h-14 rounded-xl ${service.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
+                          >
+                            {service.icon}
+                          </div>
+                          <h3 className="font-semibold text-lg mb-2">
+                            {service.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                            {service.description}
+                          </p>
+                        </button>
+                      </TooltipTrigger>
+                      {service.value !== "ALL_SERVICES" && (
+                        <TooltipContent>
+                          <p>This service is currently disabled</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
                   </motion.div>
                 ))}
               </motion.div>
@@ -900,7 +854,7 @@ export default function WelcomePage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6">
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="ghost"
                     onClick={() => setIsDialogOpen(false)}
@@ -908,7 +862,7 @@ export default function WelcomePage() {
                     className="rounded-xl hover:bg-muted/50"
                   >
                     Cancel
-                  </Button>
+                  </Button> */}
                   {selectedService && (
                     <Button
                       type="button"
@@ -923,7 +877,7 @@ export default function WelcomePage() {
                   {selectedService && (
                     <Button
                       type="submit"
-                      className="bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl shadow-lg hover:shadow-xl"
+                      className="rounded-xl flex gap-2 items-center hover:cursor-pointer px-4 py-2 border border-border bg-primary/10 backdrop-blur-sm text-sm font-normal text-primary hover:bg-primary-20"
                       disabled={isLoading || isSubmitting}
                     >
                       {isLoading || isSubmitting ? (

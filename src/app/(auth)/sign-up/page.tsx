@@ -40,7 +40,6 @@ import { signup } from "../actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-// Enhanced password validation
 const passwordSchema = z
   .string()
   .min(8, "Password must be at least 8 characters")
@@ -74,7 +73,6 @@ const formSchema = z
     path: ["confirmPassword"],
   });
 
-// Password strength indicator
 const getPasswordStrength = (
   password: string
 ): { score: number; text: string; color: string } => {
@@ -160,8 +158,11 @@ export default function RegisterPage() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-black via-gray-900 to-slate-900 relative overflow-hidden">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gray-800/20 backdrop-blur-xl rounded-full animate-pulse"></div>
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400 relative z-10" />
+        </div>
       </div>
     );
   }
@@ -192,34 +193,44 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-white p-4">
+    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-black via-gray-900 to-slate-900 p-4 relative overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-slate-800/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gray-800/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-zinc-800/15 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-20 right-20 w-60 h-60 bg-stone-800/20 rounded-full blur-2xl animate-pulse delay-700"></div>
+        <div className="absolute bottom-20 left-20 w-72 h-72 bg-neutral-800/15 rounded-full blur-2xl animate-pulse delay-300"></div>
+      </div>
+
       <motion.div
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        <Card className="border border-gray-200 shadow-xl shadow-gray-200/20 bg-white/10 backdrop-blur-lg backdrop-saturate-200">
-          <CardHeader className="space-y-2 pb-2">
+        <Card className="border border-gray-700/50 shadow-2xl bg-gradient-to-br from-gray-900/70 via-black/50 to-gray-800/60 backdrop-blur-2xl backdrop-saturate-200 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800/25 via-zinc-900/15 to-gray-900/20 pointer-events-none"></div>
+
+          <CardHeader className="space-y-2 pb-2 relative z-10">
             <motion.div variants={itemVariants}>
-              <CardTitle className="text-2xl font-semibold text-gray-800 text-center tracking-tight">
+              <CardTitle className="text-2xl font-semibold text-gray-200 text-center tracking-tight">
                 Create your account
               </CardTitle>
             </motion.div>
             <motion.div variants={itemVariants}>
-              <CardDescription className="text-gray-500 text-center text-sm">
+              <CardDescription className="text-gray-400 text-center text-sm">
                 Join thousands of professionals already using our platform
               </CardDescription>
             </motion.div>
           </CardHeader>
 
-          <CardContent className="space-y-6 px-6">
+          <CardContent className="space-y-6 px-6 relative z-10">
             <motion.div variants={itemVariants}>
               <div className="relative flex items-center justify-center">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-300" />
+                  <span className="w-full border-t border-gray-700/50" />
                 </div>
-                <span className="relative bg-white/10 backdrop-blur-sm px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <span className="relative bg-gradient-to-r from-gray-900/60 via-black/50 to-gray-800/60 backdrop-blur-sm px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Or continue with email
                 </span>
               </div>
@@ -236,25 +247,21 @@ export default function RegisterPage() {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">
+                        <FormLabel className="text-sm font-medium text-gray-300">
                           Username
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                             <Input
                               placeholder="Enter your username"
                               {...field}
-                              className="h-11 pl-10 border
-                              border-gray-300 bg-white/20 backdrop-blur-sm
-                              text-gray-800 placeholder:text-gray-400
-                              focus:border-gray-400 focus:bg-white/30
-                              transition-colors rounded-lg"
+                              className="h-11 pl-10 border-gray-700/50 bg-gradient-to-r from-gray-800/50 via-black/40 to-gray-900/50 backdrop-blur-sm text-gray-200 placeholder:text-gray-500 focus:border-gray-600/70 focus:bg-gradient-to-r focus:from-gray-800/70 focus:via-black/60 focus:to-gray-900/70 transition-all duration-200 rounded-lg hover:from-gray-800/60 hover:via-black/50 hover:to-gray-900/60"
                               disabled={isLoading}
                             />
                           </div>
                         </FormControl>
-                        <FormMessage className="text-xs" />
+                        <FormMessage className="text-xs text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -266,22 +273,22 @@ export default function RegisterPage() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">
+                        <FormLabel className="text-sm font-medium text-gray-300">
                           Email Address
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                             <Input
                               type="email"
                               placeholder="Enter your email address"
                               {...field}
-                              className="h-11 pl-10 border-gray-300 bg-white/20 backdrop-blur-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-400 focus:bg-white/30 transition-colors rounded-lg"
+                              className="h-11 pl-10 border-gray-700/50 bg-gradient-to-r from-gray-800/50 via-black/40 to-gray-900/50 backdrop-blur-sm text-gray-200 placeholder:text-gray-500 focus:border-gray-600/70 focus:bg-gradient-to-r focus:from-gray-800/70 focus:via-black/60 focus:to-gray-900/70 transition-all duration-200 rounded-lg hover:from-gray-800/60 hover:via-black/50 hover:to-gray-900/60"
                               disabled={isLoading}
                             />
                           </div>
                         </FormControl>
-                        <FormMessage className="text-xs" />
+                        <FormMessage className="text-xs text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -293,7 +300,7 @@ export default function RegisterPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">
+                        <FormLabel className="text-sm font-medium text-gray-300">
                           Password
                         </FormLabel>
                         <FormControl>
@@ -302,21 +309,21 @@ export default function RegisterPage() {
                               type={showPassword ? "text" : "password"}
                               placeholder="Create a strong password"
                               {...field}
-                              className="h-11 pr-10 border-gray-300 bg-white/20 backdrop-blur-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-400 focus:bg-white/30 transition-colors rounded-lg"
+                              className="h-11 pr-10 border-gray-700/50 bg-gradient-to-r from-gray-800/50 via-black/40 to-gray-900/50 backdrop-blur-sm text-gray-200 placeholder:text-gray-500 focus:border-gray-600/70 focus:bg-gradient-to-r focus:from-gray-800/70 focus:via-black/60 focus:to-gray-900/70 transition-all duration-200 rounded-lg hover:from-gray-800/60 hover:via-black/50 hover:to-gray-900/60"
                               disabled={isLoading}
                             />
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-gradient-to-r hover:from-gray-800/40 hover:via-black/30 hover:to-gray-900/40 text-gray-500 hover:text-gray-400"
                               onClick={() => setShowPassword(!showPassword)}
                               disabled={isLoading}
                             >
                               {showPassword ? (
-                                <EyeOff className="h-4 w-4 text-gray-400" />
+                                <EyeOff className="h-4 w-4" />
                               ) : (
-                                <Eye className="h-4 w-4 text-gray-400" />
+                                <Eye className="h-4 w-4" />
                               )}
                             </Button>
                           </div>
@@ -339,7 +346,7 @@ export default function RegisterPage() {
                                 {passwordStrength.text}
                               </span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-1.5">
+                            <div className="w-full bg-gray-700/50 rounded-full h-1.5">
                               <div
                                 className={`${passwordStrength.color} h-1.5 rounded-full transition-all duration-300 ease-out`}
                                 style={{
@@ -351,7 +358,7 @@ export default function RegisterPage() {
                             </div>
                           </div>
                         )}
-                        <FormMessage className="text-xs" />
+                        <FormMessage className="text-xs text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -363,7 +370,7 @@ export default function RegisterPage() {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">
+                        <FormLabel className="text-sm font-medium text-gray-300">
                           Confirm Password
                         </FormLabel>
                         <FormControl>
@@ -372,23 +379,23 @@ export default function RegisterPage() {
                               type={showConfirmPassword ? "text" : "password"}
                               placeholder="Confirm your password"
                               {...field}
-                              className="h-11 pr-10 border-gray-300 bg-white/20 backdrop-blur-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-400 focus:bg-white/30 transition-colors rounded-lg"
+                              className="h-11 pr-10 border-gray-700/50 bg-gradient-to-r from-gray-800/50 via-black/40 to-gray-900/50 backdrop-blur-sm text-gray-200 placeholder:text-gray-500 focus:border-gray-600/70 focus:bg-gradient-to-r focus:from-gray-800/70 focus:via-black/60 focus:to-gray-900/70 transition-all duration-200 rounded-lg hover:from-gray-800/60 hover:via-black/50 hover:to-gray-900/60"
                               disabled={isLoading}
                             />
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-gradient-to-r hover:from-gray-800/40 hover:via-black/30 hover:to-gray-900/40 text-gray-500 hover:text-gray-400"
                               onClick={() =>
                                 setShowConfirmPassword(!showConfirmPassword)
                               }
                               disabled={isLoading}
                             >
                               {showConfirmPassword ? (
-                                <EyeOff className="h-4 w-4 text-gray-400" />
+                                <EyeOff className="h-4 w-4" />
                               ) : (
-                                <Eye className="h-4 w-4 text-gray-400" />
+                                <Eye className="h-4 w-4" />
                               )}
                               {field.value && watchedPassword && (
                                 <div className="absolute -right-8 top-1/2 -translate-y-1/2">
@@ -402,7 +409,7 @@ export default function RegisterPage() {
                             </Button>
                           </div>
                         </FormControl>
-                        <FormMessage className="text-xs" />
+                        <FormMessage className="text-xs text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -418,28 +425,28 @@ export default function RegisterPage() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className="mt-0.5 data-[state=checked]:bg-gray-600 data-[state=checked]:border-gray-600 border-gray-400"
+                            className="mt-0.5 data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-gray-700 data-[state=checked]:to-gray-800 data-[state=checked]:border-gray-700 border-gray-600/50 bg-gradient-to-r from-gray-800/50 via-black/30 to-gray-900/50 backdrop-blur-sm"
                             disabled={isLoading}
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel className="text-sm text-gray-500 font-normal">
+                          <FormLabel className="text-sm text-gray-400 font-normal">
                             I agree to the{" "}
                             <Link
                               href="/terms"
-                              className="font-medium text-gray-800 hover:underline underline-offset-4"
+                              className="font-medium text-gray-300 hover:text-gray-200 hover:underline underline-offset-4"
                             >
                               Terms of Service
                             </Link>{" "}
                             and{" "}
                             <Link
                               href="/privacy"
-                              className="font-medium text-gray-800 hover:underline underline-offset-4"
+                              className="font-medium text-gray-300 hover:text-gray-200 hover:underline underline-offset-4"
                             >
                               Privacy Policy
                             </Link>
                           </FormLabel>
-                          <FormMessage className="text-xs" />
+                          <FormMessage className="text-xs text-red-400" />
                         </div>
                       </FormItem>
                     )}
@@ -449,7 +456,7 @@ export default function RegisterPage() {
                 <motion.div variants={itemVariants}>
                   <Button
                     type="submit"
-                    className="w-full h-11 bg-gray-800 hover:bg-gray-900 text-white font-medium backdrop-blur-sm border border-gray-300 hover:border-gray-400 transition-colors rounded-lg"
+                    className="w-full h-11 bg-gradient-to-r from-gray-800 via-black to-gray-900 hover:from-gray-700 hover:via-gray-900 hover:to-black text-gray-200 font-medium backdrop-blur-sm border border-gray-700/50 hover:border-gray-600/70 transition-all duration-200 rounded-lg shadow-lg hover:shadow-black/50"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -466,15 +473,15 @@ export default function RegisterPage() {
             </Form>
           </CardContent>
 
-          <CardFooter className="pt-2">
+          <CardFooter className="pt-2 relative z-10">
             <motion.p
-              className="text-center text-sm text-gray-500 w-full"
+              className="text-center text-sm text-gray-400 w-full"
               variants={itemVariants}
             >
               Already have an account?{" "}
               <Link
                 href="/sign-in"
-                className="font-medium text-gray-800 hover:underline underline-offset-4 transition-colors"
+                className="font-medium text-gray-300 hover:text-gray-200 hover:underline underline-offset-4 transition-colors"
               >
                 Sign in
               </Link>
@@ -486,8 +493,10 @@ export default function RegisterPage() {
           variants={itemVariants}
           className="mt-4 text-center text-xs text-gray-500"
         >
-          <Shield className="h-3 w-3 inline mr-1" />
-          Your data is encrypted and secure
+          <div className="flex items-center justify-center bg-gradient-to-r from-gray-800/40 via-black/30 to-gray-900/40 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-700/30">
+            <Shield className="h-3 w-3 inline mr-1" />
+            Your data is encrypted and secure
+          </div>
         </motion.div>
       </motion.div>
     </div>

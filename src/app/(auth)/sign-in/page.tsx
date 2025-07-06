@@ -39,7 +39,6 @@ import { login } from "../actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-// Enhanced form schema for validation
 const formSchema = z.object({
   email: z
     .string()
@@ -97,13 +96,15 @@ export default function LoginPage() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black relative overflow-hidden">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gray-800/20 backdrop-blur-xl rounded-full animate-pulse"></div>
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400 relative z-10" />
+        </div>
       </div>
     );
   }
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -112,7 +113,7 @@ export default function LoginPage() {
       transition: {
         duration: 0.6,
         staggerChildren: 0.1,
-        ease: [0.4, 0.0, 0.2, 1],
+        ease: "easeInOut",
       },
     },
   };
@@ -130,35 +131,47 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-white p-4">
+    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-black via-gray-900 to-slate-900 p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-slate-800/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gray-800/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-zinc-800/15 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-20 right-20 w-60 h-60 bg-stone-800/20 rounded-full blur-2xl animate-pulse delay-700"></div>
+        <div className="absolute bottom-20 left-20 w-72 h-72 bg-neutral-800/15 rounded-full blur-2xl animate-pulse delay-300"></div>
+      </div>
+
       <motion.div
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        <Card className="border border-gray-200 shadow-xl shadow-gray-200/20 bg-white/10 backdrop-blur-lg backdrop-saturate-200">
-          <CardHeader className="space-y-2 pb-6">
+        <Card className="border border-border shadow-2xl bg-gradient-to-br from-gray-900/70 via-black/50 to-gray-800/60 backdrop-blur-2xl backdrop-saturate-200 relative overflow-hidden">
+          {/* Glass effect overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800/25 via-zinc-900/15 to-gray-900/20 pointer-events-none"></div>
+
+          <CardHeader className="space-y-2 pb-6 relative z-10">
             <motion.div variants={itemVariants}>
-              <CardTitle className="text-2xl font-semibold text-gray-800 text-center tracking-tight">
+              <CardTitle className="text-2xl font-semibold text-gray-200 text-center tracking-tight">
                 Welcome back
               </CardTitle>
             </motion.div>
             <motion.div variants={itemVariants}>
-              <CardDescription className="text-gray-500 text-center text-sm">
+              <CardDescription className="text-gray-400 text-center text-sm">
                 Sign in to your account to continue where you left off
               </CardDescription>
             </motion.div>
           </CardHeader>
 
-          <CardContent className="space-y-6 px-6">
+          <CardContent className="space-y-6 px-6 relative z-10">
             {loginAttempts >= 3 && (
               <motion.div
                 variants={itemVariants}
-                className="flex items-center p-3 rounded-lg bg-amber-100/20 backdrop-blur-sm border border-amber-300/30"
+                className="flex items-center p-3 rounded-lg bg-amber-500/20 backdrop-blur-sm border border-amber-400/30"
               >
-                <AlertCircle className="h-4 w-4 text-amber-600 mr-2 flex-shrink-0" />
-                <p className="text-sm text-amber-600">
+                <AlertCircle className="h-4 w-4 text-amber-400 mr-2 flex-shrink-0" />
+                <p className="text-sm text-amber-300">
                   Multiple failed attempts detected. Please check your
                   credentials or reset your password.
                 </p>
@@ -168,9 +181,9 @@ export default function LoginPage() {
             <motion.div variants={itemVariants}>
               <div className="relative flex items-center justify-center">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-300" />
+                  <span className="w-full border-t border-gray-700/50" />
                 </div>
-                <span className="relative bg-white/10 backdrop-blur-sm px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <span className="relative bg-gray-900/40 backdrop-blur-sm px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   continue with email
                 </span>
               </div>
@@ -187,23 +200,23 @@ export default function LoginPage() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">
+                        <FormLabel className="text-sm font-medium text-gray-300">
                           Email Address
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                             <Input
                               type="email"
                               placeholder="Enter your email address"
                               {...field}
-                              className="h-11 pl-10 border-gray-300 bg-white/20 backdrop-blur-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-400 focus:bg-white/30 transition-colors rounded-lg"
+                              className="h-11 pl-10 border-gray-700/50 bg-gradient-to-r from-gray-800/50 via-black/40 to-gray-900/50 backdrop-blur-sm text-gray-200 placeholder:text-gray-500 focus:border-gray-600/70 focus:bg-gradient-to-r focus:from-gray-800/70 focus:via-black/60 focus:to-gray-900/70 transition-all duration-200 rounded-lg hover:from-gray-800/60 hover:via-black/50 hover:to-gray-900/60"
                               disabled={isLoading}
                               autoComplete="email"
                             />
                           </div>
                         </FormControl>
-                        <FormMessage className="text-xs" />
+                        <FormMessage className="text-xs text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -215,7 +228,7 @@ export default function LoginPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">
+                        <FormLabel className="text-sm font-medium text-gray-300">
                           Password
                         </FormLabel>
                         <FormControl>
@@ -224,7 +237,7 @@ export default function LoginPage() {
                               type={showPassword ? "text" : "password"}
                               placeholder="Enter your password"
                               {...field}
-                              className="h-11 pr-10 border-gray-300 bg-white/20 backdrop-blur-sm text-gray-800 placeholder:text-gray-400 focus:border-gray-400 focus:bg-white/30 transition-colors rounded-lg"
+                              className="h-11 pr-10 border-gray-700/50 bg-gradient-to-r from-gray-800/50 via-black/40 to-gray-900/50 backdrop-blur-sm text-gray-200 placeholder:text-gray-500 focus:border-gray-600/70 focus:bg-gradient-to-r focus:from-gray-800/70 focus:via-black/60 focus:to-gray-900/70 transition-all duration-200 rounded-lg hover:from-gray-800/60 hover:via-black/50 hover:to-gray-900/60"
                               disabled={isLoading}
                               autoComplete="current-password"
                             />
@@ -232,19 +245,19 @@ export default function LoginPage() {
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-gradient-to-r hover:from-gray-800/40 hover:via-black/30 hover:to-gray-900/40 text-gray-500 hover:text-gray-400"
                               onClick={() => setShowPassword(!showPassword)}
                               disabled={isLoading}
                             >
                               {showPassword ? (
-                                <EyeOff className="h-4 w-4 text-gray-400" />
+                                <EyeOff className="h-4 w-4" />
                               ) : (
-                                <Eye className="h-4 w-4 text-gray-400" />
+                                <Eye className="h-4 w-4" />
                               )}
                             </Button>
                           </div>
                         </FormControl>
-                        <FormMessage className="text-xs" />
+                        <FormMessage className="text-xs text-red-400" />
                       </FormItem>
                     )}
                   />
@@ -263,12 +276,12 @@ export default function LoginPage() {
                           id="rememberMe"
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          className="mt-0.5 data-[state=checked]:bg-gray-600 data-[state=checked]:border-gray-600 border-gray-400"
+                          className="mt-0.5 data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-gray-700 data-[state=checked]:to-gray-800 data-[state=checked]:border-gray-700 border-gray-600/50 bg-gradient-to-r from-gray-800/50 via-black/30 to-gray-900/50 backdrop-blur-sm"
                           disabled={isLoading}
                         />
                         <label
                           htmlFor="rememberMe"
-                          className="text-sm text-gray-500 cursor-pointer"
+                          className="text-sm text-gray-400 cursor-pointer"
                         >
                           Remember me
                         </label>
@@ -277,7 +290,7 @@ export default function LoginPage() {
                   />
                   <Link
                     href="/auth/forgot-password"
-                    className="text-sm font-medium text-gray-800 hover:underline underline-offset-4 transition-colors"
+                    className="text-sm font-medium text-gray-300 hover:text-gray-200 hover:underline underline-offset-4 transition-colors"
                   >
                     Forgot password?
                   </Link>
@@ -286,7 +299,7 @@ export default function LoginPage() {
                 <motion.div variants={itemVariants}>
                   <Button
                     type="submit"
-                    className="w-full h-11 bg-gray-800 hover:bg-gray-900 text-white font-medium backdrop-blur-sm border border-gray-300 hover:border-gray-400 transition-colors rounded-lg group"
+                    className="w-full h-11 bg-gradient-to-r from-gray-800 via-black to-gray-900 hover:from-gray-700 hover:via-gray-900 hover:to-black text-gray-200 font-medium backdrop-blur-sm border border-gray-700/50 hover:border-gray-600/70 transition-all duration-200 rounded-lg group shadow-lg hover:shadow-black/50"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -309,13 +322,13 @@ export default function LoginPage() {
               <div className="grid grid-cols-2 gap-3 text-center">
                 <Link
                   href="/auth/forgot-password"
-                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                  className="text-xs text-gray-500 hover:text-gray-400 transition-colors p-2 rounded-lg hover:bg-gradient-to-r hover:from-gray-800/50 hover:via-black/40 hover:to-gray-900/50 backdrop-blur-sm"
                 >
                   Reset Password
                 </Link>
                 <Link
                   href="/support"
-                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                  className="text-xs text-gray-500 hover:text-gray-400 transition-colors p-2 rounded-lg hover:bg-gradient-to-r hover:from-gray-800/50 hover:via-black/40 hover:to-gray-900/50 backdrop-blur-sm"
                 >
                   Need Help?
                 </Link>
@@ -323,15 +336,15 @@ export default function LoginPage() {
             </motion.div>
           </CardContent>
 
-          <CardFooter className="pt-4">
+          <CardFooter className="pt-4 relative z-10">
             <motion.p
-              className="text-center text-sm text-gray-500 w-full"
+              className="text-center text-sm text-gray-400 w-full"
               variants={itemVariants}
             >
               Do not have an account?
               <Link
                 href="/sign-up"
-                className="font-medium text-gray-800 hover:underline underline-offset-4 transition-colors ml-1"
+                className="font-medium text-gray-300 hover:text-gray-200 hover:underline underline-offset-4 transition-colors ml-1"
               >
                 Create an account
               </Link>
@@ -343,8 +356,10 @@ export default function LoginPage() {
           variants={itemVariants}
           className="mt-6 text-center text-xs text-gray-500"
         >
-          <Shield className="h-3 w-3 inline mr-1" />
-          Protected by enterprise-grade security
+          <div className="flex items-center justify-center bg-gradient-to-r from-gray-800/40 via-black/30 to-gray-900/40 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-700/30">
+            <Shield className="h-3 w-3 inline mr-1" />
+            Protected by enterprise-grade security
+          </div>
         </motion.div>
       </motion.div>
     </div>
