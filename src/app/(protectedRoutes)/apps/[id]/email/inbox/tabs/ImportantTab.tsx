@@ -87,22 +87,46 @@ const ImportantTab: React.FC<ImportantTabProps> = ({ userId, projectId }) => {
   };
 
   if (isLoading || !emailInsights || !emailInsights.hasGmail) {
+    // Modern skeleton loader for important tab, fully responsive
     return (
-      <div className="w-full h-full flex flex-col justify-center items-center min-h-[400px]">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-purple-200 rounded-full"></div>
-            <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-          </div>
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-primary">
-              Loading Your Important Folder
-            </h3>
-            <p className="text-muted-foreground mt-1">
-              Fetching your important emails...
-            </p>
-          </div>
-        </div>
+      <div className="flex min-h-[50vh] w-full items-center justify-center p-2">
+        <Card className="w-full shadow-xl bg-card/80 backdrop-blur border border-slate-200 dark:border-slate-800 flex flex-col">
+          <CardHeader className="flex-shrink-0 border-b bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse aspect-square" />
+                <div className="flex flex-col gap-2">
+                  <div className="h-6 rounded bg-slate-200 dark:bg-slate-800 animate-pulse w-32 max-w-full" />
+                  <div className="h-4 rounded bg-slate-100 dark:bg-slate-700 animate-pulse w-24 max-w-full" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 w-full max-w-full">
+                <div className="h-10 rounded bg-slate-100 dark:bg-slate-700 animate-pulse flex-1" />
+                <div className="h-10 rounded bg-slate-200 dark:bg-slate-800 animate-pulse w-20" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="flex flex-col flex-1 overflow-hidden p-0 gap-4">
+            {/* Skeleton for Email List */}
+            <div className="flex-1 p-2 flex flex-col gap-2 min-w-0">
+              {[...Array(8)].map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse w-full"
+                >
+                  <div className="h-4 w-4 rounded bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-4 w-4 rounded bg-slate-200 dark:bg-slate-700" />
+                  <div className="flex-1 flex flex-col gap-1 min-w-0">
+                    <div className="h-4 rounded bg-slate-200 dark:bg-slate-700 w-32 max-w-full" />
+                    <div className="h-3 rounded bg-slate-100 dark:bg-slate-800 w-48 max-w-full" />
+                    <div className="h-3 rounded bg-slate-100 dark:bg-slate-800 w-24 max-w-full" />
+                  </div>
+                  <div className="h-3 w-12 rounded bg-slate-200 dark:bg-slate-700" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

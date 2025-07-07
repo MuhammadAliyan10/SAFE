@@ -175,7 +175,6 @@ export default function RegisterPage() {
       transition: {
         duration: 0.6,
         staggerChildren: 0.1,
-        ease: [0.42, 0, 0.58, 1],
       },
     },
   };
@@ -187,7 +186,6 @@ export default function RegisterPage() {
       opacity: 1,
       transition: {
         duration: 0.4,
-        ease: "easeInOut",
       },
     },
   };

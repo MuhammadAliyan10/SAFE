@@ -18,6 +18,7 @@ import {
   Cell,
   AreaChart,
   Area,
+  Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -163,12 +164,11 @@ const InvoiceAnalyticsTab: React.FC<InvoiceAnalyticsTabProps> = ({
       <div className="p-6 space-y-6 min-h-screen">
         <div className="flex items-center justify-between">
           <div>
-            <Skeleton className="h-8 w-64 mb-2" />
-            <Skeleton className="h-4 w-96" />
+            <div className="h-8 w-64 rounded bg-slate-200 dark:bg-slate-800 mb-2 animate-pulse" />
+            <div className="h-4 w-96 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
           </div>
           <div className="flex space-x-3">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
+            <div className="h-10 w-24 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
           </div>
         </div>
 
@@ -177,11 +177,11 @@ const InvoiceAnalyticsTab: React.FC<InvoiceAnalyticsTabProps> = ({
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24" />
+                <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-20 mb-2" />
-                <Skeleton className="h-3 w-32" />
+                <div className="h-8 w-20 mb-2 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                <div className="h-3 w-32 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
               </CardContent>
             </Card>
           ))}
@@ -192,10 +192,10 @@ const InvoiceAnalyticsTab: React.FC<InvoiceAnalyticsTabProps> = ({
           {[...Array(2)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
-                <Skeleton className="h-6 w-48" />
+                <div className="h-6 w-48 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-[300px] w-full" />
+                <div className="h-[300px] w-full rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
               </CardContent>
             </Card>
           ))}
@@ -204,7 +204,7 @@ const InvoiceAnalyticsTab: React.FC<InvoiceAnalyticsTabProps> = ({
         {/* Recent Invoices Skeleton */}
         <Card>
           <CardHeader>
-            <Skeleton className="h-6 w-48" />
+            <div className="h-6 w-48 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -214,15 +214,15 @@ const InvoiceAnalyticsTab: React.FC<InvoiceAnalyticsTabProps> = ({
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex items-center space-x-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
                     <div>
-                      <Skeleton className="h-4 w-32 mb-1" />
-                      <Skeleton className="h-3 w-24" />
+                      <div className="h-4 w-32 mb-1 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                      <div className="h-3 w-24 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <Skeleton className="h-6 w-16" />
-                    <Skeleton className="h-6 w-20" />
+                    <div className="h-6 w-16 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                    <div className="h-6 w-20 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
                   </div>
                 </div>
               ))}
@@ -245,10 +245,6 @@ const InvoiceAnalyticsTab: React.FC<InvoiceAnalyticsTabProps> = ({
             <p className="text-muted-foreground mb-4">
               Please try refreshing the page
             </p>
-            <Button onClick={handleRefresh} variant="outline">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Retry
-            </Button>
           </div>
         </div>
       </div>
@@ -267,15 +263,7 @@ const InvoiceAnalyticsTab: React.FC<InvoiceAnalyticsTabProps> = ({
         </div>
         <div className="flex items-center space-x-3">
           <Button
-            onClick={handleRefresh}
             variant="default"
-            className="flex items-center space-x-2 px-4 py-2 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span className="text-sm font-medium">Refresh</span>
-          </Button>
-          <Button
-            variant="secondary"
             className="flex items-center space-x-2 px-4 py-2 transition-colors"
           >
             <Download className="w-4 h-4" />

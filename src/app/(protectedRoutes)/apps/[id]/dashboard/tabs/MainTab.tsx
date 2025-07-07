@@ -34,7 +34,6 @@ import {
   BarChart3,
   Clock,
   Users,
-  Zap,
   Eye,
   Download,
   Filter,
@@ -68,7 +67,6 @@ import {
   Server,
   Cloud,
   CloudOff,
-  Zap,
   Battery,
   BatteryCharging,
   BatteryFull,
@@ -113,10 +111,12 @@ import {
   PowerIcon as PowerOnIcon9,
   PowerOffIcon as PowerOffIcon10,
   PowerIcon as PowerOnIcon10,
+  Info,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchOverviewData } from "@/app/actions/main";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface MainTabProps {
   userId: string;
@@ -160,8 +160,33 @@ const MainTab: React.FC<MainTabProps> = ({ userId }) => {
     }
   };
 
+  const handleExport = async () => {
+    if (!data) return;
+    const rows = [
+      ["Section", "Metric", "Value"],
+      ["Emails", "Total Emails", data.emailMetrics.totalEmails],
+      ...data.emailMetrics.threatCounts.map((tc) => [
+        "Emails",
+        `Threat: ${tc.type}`,
+        tc.count,
+      ]),
+      ["Invoices", "Total Invoices", data.invoiceMetrics.totalInvoices],
+      ["Invoices", "Paid", data.invoiceMetrics.paidInvoices],
+      ["Invoices", "Pending", data.invoiceMetrics.pendingInvoices],
+      ["Invoices", "Overdue", data.invoiceMetrics.overdueInvoices],
+      ["Documents", "Total Documents", data.documentMetrics.totalDocuments],
+      ["Documents", "Secure Documents", data.documentMetrics.secureDocuments],
+      ["Documents", "Shared Documents", data.documentMetrics.sharedDocuments],
+    ];
+    const csv = rows.map((r) => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    // @ts-ignore: No types for file-saver
+    const fileSaver = await import("file-saver");
+    fileSaver.saveAs(blob, "dashboard_export.csv");
+  };
+
   // Prepare chart data
-  const emailActivityData = data?.emailMetrics.emailActivity
+  const emailActivityData = data?.emailMetrics?.emailActivity?.length
     ? data.emailMetrics.emailActivity.slice(-7).map((item) => ({
         date: new Date(item.date).toLocaleDateString("en-US", {
           month: "short",
@@ -170,6 +195,8 @@ const MainTab: React.FC<MainTabProps> = ({ userId }) => {
         emails: item.count,
       }))
     : [];
+
+  const totalEmails = data?.emailMetrics?.totalEmails ?? 0;
 
   const threatData = data?.emailMetrics.threatCounts
     ? data.emailMetrics.threatCounts.map((threat) => ({
@@ -255,78 +282,88 @@ const MainTab: React.FC<MainTabProps> = ({ userId }) => {
     return iconMap[type] || Activity;
   };
 
+  // --- Color palette for world-class SaaS ---
+  const cardBg = "bg-card";
+  const cardBorder = "border-slate-200 dark:border-slate-800";
+  const cardShadow = "shadow-lg";
+  const cardHover = "hover:border-indigo-500/60 hover:shadow-xl";
+  const iconColor = "text-indigo-600 dark:text-indigo-400";
+  const chartPrimary = theme === "dark" ? "#6366f1" : "#4f46e5"; // Indigo
+  const chartSecondary = theme === "dark" ? "#818cf8" : "#6366f1";
+  const chartWarning = theme === "dark" ? "#fbbf24" : "#f59e0b";
+  const chartSuccess = theme === "dark" ? "#34d399" : "#10b981";
+  const chartDanger = theme === "dark" ? "#f87171" : "#ef4444";
+  const textCard = "text-card-foreground";
+  const textMain = "text-foreground";
+
+  // --- Summary Metrics ---
+  const summaryMetrics = [
+    {
+      label: "Total Emails",
+      value: totalEmails,
+      icon: <Mail className={`w-6 h-6 ${iconColor}`} />,
+    },
+    {
+      label: "Total Invoices",
+      value: data?.invoiceMetrics?.totalInvoices ?? 0,
+      icon: <FileText className={`w-6 h-6 ${iconColor}`} />,
+    },
+    {
+      label: "Total Documents",
+      value: data?.documentMetrics?.totalDocuments ?? 0,
+      icon: <FileCheck className={`w-6 h-6 ${iconColor}`} />,
+    },
+    {
+      label: "Total Expenses",
+      value: data?.expenseMetrics?.totalExpenses ?? 0,
+      icon: <Receipt className={`w-6 h-6 ${iconColor}`} />,
+    },
+  ];
+
+  // Get project name if available
+  const projectName = data?.project?.name || "Project";
+
   if (isLoading) {
+    // Modern skeleton loader matching the dashboard layout
     return (
       <div className="p-6 space-y-6 min-h-screen">
+        {/* Heading Skeleton */}
         <div className="flex items-center justify-between">
           <div>
-            <Skeleton className="h-8 w-64 mb-2" />
-            <Skeleton className="h-4 w-96" />
+            <div className="h-8 w-64 rounded bg-slate-200 dark:bg-slate-800 mb-2 animate-pulse" />
+            <div className="h-4 w-80 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
           </div>
           <div className="flex space-x-3">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
+            <div className="h-10 w-24 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
           </div>
         </div>
-
-        {/* Stats Grid Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+        {/* Summary Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {[...Array(4)].map((_, idx) => (
+            <Card key={idx}>
               <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24" />
+                <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-20 mb-2" />
-                <Skeleton className="h-3 w-32" />
+                <div className="h-8 w-20 mb-2 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                <div className="h-3 w-32 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
               </CardContent>
             </Card>
           ))}
         </div>
-
         {/* Charts Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {[...Array(2)].map((_, i) => (
-            <Card key={i}>
+          {[...Array(2)].map((_, idx) => (
+            <Card key={idx}>
               <CardHeader>
-                <Skeleton className="h-6 w-48" />
+                <div className="h-6 w-48 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-[300px] w-full" />
+                <div className="h-[300px] w-full rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
               </CardContent>
             </Card>
           ))}
         </div>
-
-        {/* Recent Activity Skeleton */}
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div>
-                      <Skeleton className="h-4 w-32 mb-1" />
-                      <Skeleton className="h-3 w-24" />
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Skeleton className="h-6 w-16" />
-                    <Skeleton className="h-6 w-20" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -355,39 +392,20 @@ const MainTab: React.FC<MainTabProps> = ({ userId }) => {
 
   return (
     <div className="p-6 space-y-6 min-h-screen">
-      {/* Header */}
+      {/* Heading and Description */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-primary">
-            Dashboard Overview
+            {projectName} Dashboard Overview
           </h1>
           <p className="text-muted-foreground mt-1">
-            Comprehensive insights across all your business services
+            Your business at a glance. Key metrics, trends, and recent activity.
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <Button
-            onClick={handleRefresh}
+            onClick={handleExport}
             variant="default"
-            disabled={isRefreshing}
-            className="flex items-center space-x-2 px-4 py-2 transition-colors"
-          >
-            {isRefreshing ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <RefreshCw className="w-4 h-4" />
-            )}
-            <span className="text-sm font-medium">Refresh</span>
-          </Button>
-          <Button
-            variant="secondary"
-            className="flex items-center space-x-2 px-4 py-2 transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            <span className="text-sm font-medium">Settings</span>
-          </Button>
-          <Button
-            variant="outline"
             className="flex items-center space-x-2 px-4 py-2 transition-colors"
           >
             <Download className="w-4 h-4" />
@@ -395,278 +413,345 @@ const MainTab: React.FC<MainTabProps> = ({ userId }) => {
           </Button>
         </div>
       </div>
-
-      {/* Key Metrics */}
+      {/* Summary Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              ${data?.invoiceMetrics.totalAmount?.toLocaleString() || 0}
+        <Card className="bg-card border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-primary">
+                Total Emails
+              </CardTitle>
+              <Mail className="w-5 h-5 text-purple-600" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              {data?.invoiceMetrics.totalInvoices || 0} invoices
-            </p>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="text-2xl font-bold text-primary">
+              {totalEmails.toLocaleString()}
+            </div>
+            <p className="text-sm text-purple-600 mt-1">Processed this month</p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Clients
-            </CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {data?.clientMetrics.activeClients || 0}
+        <Card className="bg-card border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-primary">
+                Total Invoices
+              </CardTitle>
+              <FileText className="w-5 h-5 text-blue-600" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              of {data?.clientMetrics.totalClients || 0} total clients
-            </p>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="text-2xl font-bold text-primary">
+              {data?.invoiceMetrics?.totalInvoices?.toLocaleString?.() ?? 0}
+            </div>
+            <p className="text-sm text-blue-600 mt-1">Issued this month</p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Security Score
-            </CardTitle>
-            <Shield className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {data?.emailMetrics.securityScore || 100}%
+        <Card className="bg-card border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-primary">
+                Total Documents
+              </CardTitle>
+              <FileCheck className="w-5 h-5 text-green-600" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              {data?.emailMetrics.totalEmails || 0} emails protected
-            </p>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="text-2xl font-bold text-primary">
+              {data?.documentMetrics?.totalDocuments?.toLocaleString?.() ?? 0}
+            </div>
+            <p className="text-sm text-green-600 mt-1">Uploaded this month</p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Expenses
-            </CardTitle>
-            <Receipt className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              ${data?.expenseMetrics.totalAmount?.toLocaleString() || 0}
+        <Card className="bg-card border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-primary">
+                Total Expenses
+              </CardTitle>
+              <Receipt className="w-5 h-5 text-red-600" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              {data?.expenseMetrics.totalExpenses || 0} expenses tracked
-            </p>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="text-2xl font-bold text-primary">
+              {data?.expenseMetrics?.totalExpenses?.toLocaleString?.() ?? 0}
+            </div>
+            <p className="text-sm text-red-600 mt-1">Spent this month</p>
           </CardContent>
         </Card>
       </div>
-
-      {/* Charts Section */}
+      {/* Main Data Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Email Activity */}
-        <Card>
+        {/* Emails Section */}
+        <Card className="bg-card border-0 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Email Activity (Last 7 Days)
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-semibold text-primary">
+                  Email Activity
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Daily email volume over time
+                </p>
+              </div>
+              <Mail className="w-5 h-5 text-purple-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            {emailActivityData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={emailActivityData}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area
+            {emailActivityData.length ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart
+                  data={emailActivityData}
+                  margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={
+                      theme === "light" ? "#f3f4f6" : "oklch(1 0 0 / 10%)"
+                    }
+                  />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Line
                     type="monotone"
                     dataKey="emails"
-                    stroke={chartColors.primary}
-                    fill={chartColors.primary}
-                    fillOpacity={0.3}
+                    stroke={chartColors.secondary}
+                    strokeWidth={3}
+                    dot={{ fill: chartColors.secondary, strokeWidth: 2, r: 4 }}
+                    activeDot={{
+                      r: 6,
+                      stroke: chartColors.secondary,
+                      strokeWidth: 2,
+                    }}
                   />
-                </AreaChart>
+                </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                <div className="text-center">
-                  <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No email activity data available</p>
-                </div>
+              <div className="flex flex-col items-center justify-center h-48 text-center">
+                <Mail className="w-12 h-12 text-primary mb-3" />
+                <h3 className="font-medium text-primary">No Activity Data</h3>
+                <p className="text-sm text-muted-foreground">
+                  Email activity will appear here once available
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
-
-        {/* Invoice Status */}
-        <Card>
+        {/* Invoices Section */}
+        <Card className="bg-card border-0 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Invoice Status Distribution
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-semibold text-primary">
+                  Invoice Status
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Breakdown of invoice status
+                </p>
+              </div>
+              <FileText className="w-5 h-5 text-blue-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            {invoiceStatusData.some((item) => item.value > 0) ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={invoiceStatusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {invoiceStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+            {invoiceStatusData.some((s) => s.value > 0) ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart
+                  data={invoiceStatusData}
+                  margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={
+                      theme === "light" ? "#f3f4f6" : "oklch(1 0 0 / 10%)"
+                    }
+                  />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Bar dataKey="value">
+                    {invoiceStatusData.map((entry, idx) => (
+                      <Cell key={`cell-${idx}`} fill={entry.color} />
                     ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                <div className="text-center">
-                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No invoice data available</p>
-                </div>
+              <div className="flex flex-col items-center justify-center h-48 text-center">
+                <FileText className="w-12 h-12 text-primary mb-3" />
+                <h3 className="font-medium text-primary">No Invoice Data</h3>
+                <p className="text-sm text-muted-foreground">
+                  Invoice data will appear here once available
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        {/* Documents Section */}
+        <Card className="bg-card border-0 shadow-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-semibold text-primary">
+                  Document Types
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Breakdown of document types
+                </p>
+              </div>
+              <FileCheck className="w-5 h-5 text-green-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {data?.documentMetrics?.typeBreakdown &&
+            data.documentMetrics.typeBreakdown.length ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart
+                  data={data.documentMetrics.typeBreakdown}
+                  margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={
+                      theme === "light" ? "#f3f4f6" : "oklch(1 0 0 / 10%)"
+                    }
+                  />
+                  <XAxis
+                    dataKey="type"
+                    tick={{ fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Bar
+                    dataKey="count"
+                    fill={chartColors.success}
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-48 text-center">
+                <FileCheck className="w-12 h-12 text-primary mb-3" />
+                <h3 className="font-medium text-primary">No Document Data</h3>
+                <p className="text-sm text-muted-foreground">
+                  Document data will appear here once available
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        {/* Expenses Section */}
+        <Card className="bg-card border-0 shadow-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-semibold text-primary">
+                  Monthly Expenses
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Monthly expenses for this project
+                </p>
+              </div>
+              <Receipt className="w-5 h-5 text-red-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {data?.expenseMetrics?.monthlyExpenses &&
+            data.expenseMetrics.monthlyExpenses.length ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart
+                  data={data.expenseMetrics.monthlyExpenses}
+                  margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke={
+                      theme === "light" ? "#f3f4f6" : "oklch(1 0 0 / 10%)"
+                    }
+                  />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Bar
+                    dataKey="amount"
+                    fill={chartColors.danger}
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-48 text-center">
+                <Receipt className="w-12 h-12 text-primary mb-3" />
+                <h3 className="font-medium text-primary">No Expense Data</h3>
+                <p className="text-sm text-muted-foreground">
+                  Expense data will appear here once available
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Client Performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Top Client Performance
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {clientPerformanceData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={clientPerformanceData}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar
-                  dataKey="invoiced"
-                  fill={chartColors.primary}
-                  name="Invoiced"
-                />
-                <Bar dataKey="paid" fill={chartColors.success} name="Paid" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-              <div className="text-center">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No client data available</p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Security Threats */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Security Threats Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {threatData.length > 0 ? (
-              threatData.map((threat, index) => (
-                <div
-                  key={threat.name}
-                  className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/30">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{threat.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {threat.value} threats detected
-                    </p>
-                  </div>
-                  <Badge variant="destructive">{threat.value}</Badge>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8 text-muted-foreground">
-                <ShieldCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No security threats detected</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Recent Activity
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {recentActivityData.length > 0 ? (
-              recentActivityData.map((activity) => {
-                const IconComponent = getActivityIcon(activity.type);
-                return (
-                  <div
-                    key={activity.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-full bg-primary/10">
-                        <IconComponent className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{activity.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {activity.description}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge variant="secondary">
-                        {new Date(activity.timestamp).toLocaleDateString()}
-                      </Badge>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No recent activity</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

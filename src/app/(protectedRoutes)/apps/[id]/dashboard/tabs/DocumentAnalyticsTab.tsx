@@ -47,15 +47,7 @@ import {
   Activity,
   Target,
   Zap,
-  FileCheck,
-  FileX,
-  FileClock,
-  FileSearch,
-  FileShield,
-  FileBarChart,
-  FileUser,
-  FileGlobe,
-  FileActivity,
+  Search,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -104,69 +96,21 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
   };
 
   // Prepare chart data
-  const documentStatusData = data?.documentMetrics?.statusBreakdown
-    ? Object.entries(data.documentMetrics.statusBreakdown).map(
-        ([status, count]) => ({
-          name: status,
-          count: Number(count),
-        })
-      )
-    : [];
-
-  const deliverySuccessData = data?.documentMetrics?.deliverySuccess
-    ? Object.entries(data.documentMetrics.deliverySuccess)
-        .map(([month, rate]) => ({
-          month: new Date(month + "-01").toLocaleDateString("en-US", {
-            month: "short",
-            year: "numeric",
-          }),
-          rate: Number(rate),
-        }))
-        .sort(
-          (a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()
-        )
-    : [];
-
-  const viewerEngagementData = data?.documentMetrics?.viewerEngagement
-    ? Object.entries(data.documentMetrics.viewerEngagement).map(
-        ([document, engagement]) => ({
-          name: document,
-          views: Number(engagement.views),
-          downloads: Number(engagement.downloads),
-          shares: Number(engagement.shares),
-        })
-      )
-    : [];
-
-  const locationData = data?.documentMetrics?.viewerLocations
-    ? Object.entries(data.documentMetrics.viewerLocations).map(
-        ([location, count]) => ({
-          name: location,
-          count: Number(count),
-        })
-      )
+  const documentTypeData = data?.documentMetrics?.typeBreakdown
+    ? data.documentMetrics.typeBreakdown.map(({ type, count }) => ({
+        name: type,
+        count: Number(count),
+      }))
     : [];
 
   // Calculate metrics
   const totalDocuments = data?.documentMetrics?.totalDocuments || 0;
-  const totalDelivered = data?.documentMetrics?.totalDelivered || 0;
-  const totalOpened = data?.documentMetrics?.totalOpened || 0;
-  const totalDownloads = data?.documentMetrics?.totalDownloads || 0;
-
-  const deliveryRate =
-    totalDocuments > 0 ? (totalDelivered / totalDocuments) * 100 : 0;
-  const openRate =
-    totalDelivered > 0 ? (totalOpened / totalDelivered) * 100 : 0;
-  const downloadRate =
-    totalOpened > 0 ? (totalDownloads / totalOpened) * 100 : 0;
 
   // Calculate security metrics
   const secureDocuments = data?.documentMetrics?.secureDocuments || 0;
-  const blockchainVerified = data?.documentMetrics?.blockchainVerified || 0;
+  const sharedDocuments = data?.documentMetrics?.sharedDocuments || 0;
   const securityScore =
-    totalDocuments > 0
-      ? ((secureDocuments + blockchainVerified) / (totalDocuments * 2)) * 100
-      : 0;
+    totalDocuments > 0 ? (secureDocuments / totalDocuments) * 100 : 0;
 
   const getStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
@@ -190,17 +134,17 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
       PDF: FileText,
       DOC: FileText,
       DOCX: FileText,
-      XLS: FileBarChart,
-      XLSX: FileBarChart,
-      PPT: FileActivity,
-      PPTX: FileActivity,
+      XLS: BarChart3,
+      XLSX: BarChart3,
+      PPT: Activity,
+      PPTX: Activity,
       TXT: FileText,
-      CONTRACT: FileShield,
-      INVOICE: FileCheck,
-      REPORT: FileBarChart,
-      PROPOSAL: FileUser,
-      AGREEMENT: FileShield,
-      CERTIFICATE: FileCheck,
+      CONTRACT: Shield,
+      INVOICE: CheckCircle,
+      REPORT: BarChart3,
+      PROPOSAL: Users,
+      AGREEMENT: Shield,
+      CERTIFICATE: CheckCircle,
     };
     return iconMap[type.toUpperCase()] || FileText;
   };
@@ -223,13 +167,11 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
       <div className="p-6 space-y-6 min-h-screen">
         <div className="flex items-center justify-between">
           <div>
-            <Skeleton className="h-8 w-64 mb-2" />
-            <Skeleton className="h-4 w-96" />
+            <div className="h-8 w-64 rounded bg-slate-200 dark:bg-slate-800 mb-2 animate-pulse" />
+            <div className="h-4 w-96 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
           </div>
           <div className="flex space-x-3">
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-10 w-24" />
+            <div className="h-10 w-24 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
           </div>
         </div>
 
@@ -238,11 +180,11 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24" />
+                <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-20 mb-2" />
-                <Skeleton className="h-3 w-32" />
+                <div className="h-8 w-20 mb-2 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                <div className="h-3 w-32 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
               </CardContent>
             </Card>
           ))}
@@ -253,10 +195,10 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
           {[...Array(2)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
-                <Skeleton className="h-6 w-48" />
+                <div className="h-6 w-48 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-[300px] w-full" />
+                <div className="h-[300px] w-full rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
               </CardContent>
             </Card>
           ))}
@@ -265,7 +207,7 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
         {/* Recent Documents Skeleton */}
         <Card>
           <CardHeader>
-            <Skeleton className="h-6 w-48" />
+            <div className="h-6 w-48 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -275,15 +217,15 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex items-center space-x-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse" />
                     <div>
-                      <Skeleton className="h-4 w-32 mb-1" />
-                      <Skeleton className="h-3 w-24" />
+                      <div className="h-4 w-32 mb-1 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                      <div className="h-3 w-24 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <Skeleton className="h-6 w-16" />
-                    <Skeleton className="h-6 w-20" />
+                    <div className="h-6 w-16 rounded bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                    <div className="h-6 w-20 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
                   </div>
                 </div>
               ))}
@@ -306,10 +248,6 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
             <p className="text-muted-foreground mb-4">
               Please try refreshing the page
             </p>
-            <Button onClick={handleRefresh} variant="outline">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Retry
-            </Button>
           </div>
         </div>
       </div>
@@ -330,26 +268,11 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
         </div>
         <div className="flex items-center space-x-3">
           <Button
-            onClick={handleRefresh}
             variant="default"
             className="flex items-center space-x-2 px-4 py-2 transition-colors"
           >
-            <RefreshCw className="w-4 h-4" />
-            <span className="text-sm font-medium">Refresh</span>
-          </Button>
-          <Button
-            variant="secondary"
-            className="flex items-center space-x-2 px-4 py-2 transition-colors"
-          >
-            <FileText className="w-4 h-4" />
-            <span className="text-sm font-medium">Upload Document</span>
-          </Button>
-          <Button
-            variant="outline"
-            className="flex items-center space-x-2 px-4 py-2 transition-colors"
-          >
             <Download className="w-4 h-4" />
-            <span className="text-sm font-medium">Export Report</span>
+            <span className="text-sm font-medium">Export</span>
           </Button>
         </div>
       </div>
@@ -368,37 +291,43 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
               {totalDocuments.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              {deliveryRate.toFixed(1)}% delivery rate
+              {securityScore.toFixed(1)}% secure
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Open Rate</CardTitle>
-            <Eye className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {openRate.toFixed(1)}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {totalOpened} documents opened
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Download Rate</CardTitle>
-            <Download className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium">
+              Secure Documents
+            </CardTitle>
+            <Shield className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {downloadRate.toFixed(1)}%
+              {secureDocuments.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              {totalDownloads} downloads
+              {((secureDocuments / (totalDocuments || 1)) * 100).toFixed(1)}% of
+              total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Shared Documents
+            </CardTitle>
+            <Share2 className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {sharedDocuments.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {((sharedDocuments / (totalDocuments || 1)) * 100).toFixed(1)}% of
+              total
             </p>
           </CardContent>
         </Card>
@@ -408,14 +337,14 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
             <CardTitle className="text-sm font-medium">
               Security Score
             </CardTitle>
-            <Shield className="h-4 w-4 text-purple-600" />
+            <CheckCircle className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
               {securityScore.toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground">
-              {blockchainVerified} blockchain verified
+              Overall document security
             </p>
           </CardContent>
         </Card>
@@ -423,176 +352,36 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Document Status Distribution */}
+        {/* Document Types */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              Document Status Distribution
+              Document Type Breakdown
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {documentStatusData.length > 0 ? (
+            {documentTypeData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={documentStatusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="count"
-                  >
-                    {documentStatusData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={`hsl(${index * 60}, 70%, 60%)`}
-                      />
-                    ))}
-                  </Pie>
+                <BarChart data={documentTypeData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
                   <Tooltip />
-                  <Legend />
-                </PieChart>
+                  <Bar dataKey="count" fill={chartColors.primary} />
+                </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">
                 <div className="text-center">
                   <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No document status data available</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Delivery Success Rate Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Delivery Success Rate Trend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {deliverySuccessData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={deliverySuccessData}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line
-                    type="monotone"
-                    dataKey="rate"
-                    stroke={chartColors.success}
-                    strokeWidth={3}
-                    dot={{ fill: chartColors.success, strokeWidth: 2, r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                <div className="text-center">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No delivery data available</p>
+                  <p>No document data available</p>
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Viewer Engagement */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Viewer Engagement by Document
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {viewerEngagementData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={viewerEngagementData}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="views" fill={chartColors.primary} name="Views" />
-                <Bar
-                  dataKey="downloads"
-                  fill={chartColors.success}
-                  name="Downloads"
-                />
-                <Bar
-                  dataKey="shares"
-                  fill={chartColors.warning}
-                  name="Shares"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-              <div className="text-center">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No engagement data available</p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Viewer Locations */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
-            Viewer Locations
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {locationData.length > 0 ? (
-              locationData.map((location, index) => (
-                <div
-                  key={location.name}
-                  className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="p-2 rounded-full bg-primary/10">
-                    <MapPin className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{location.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {location.count} viewers
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-sm">
-                      {(
-                        (location.count /
-                          locationData.reduce(
-                            (sum, loc) => sum + loc.count,
-                            0
-                          )) *
-                        100
-                      ).toFixed(1)}
-                      %
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8 text-muted-foreground">
-                <Globe className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No location data available</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Recent Documents */}
       <Card>
@@ -605,68 +394,35 @@ const DocumentAnalyticsTab: React.FC<DocumentAnalyticsTabProps> = ({
         <CardContent>
           <div className="space-y-3">
             {data?.documentMetrics?.recentDocuments?.length ? (
-              data.documentMetrics.recentDocuments.map((document) => {
-                const IconComponent = getDocumentIcon(document.type);
-                return (
-                  <div
-                    key={document.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-full bg-primary/10">
-                        <IconComponent className="h-4 w-4 text-primary" />
+              data.documentMetrics.recentDocuments.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    {getDocumentIcon(doc.type)}
+                    <div>
+                      <div className="font-medium text-primary">
+                        {doc.fileName}
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{document.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {document.description || "No description"}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-xs text-muted-foreground">
-                            {document.type} • {document.size}
-                          </span>
-                          {getSecurityIcon(document.securityLevel)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="text-right">
-                        <div className="flex items-center space-x-2">
-                          <Badge className={getStatusColor(document.status)}>
-                            {document.status}
-                          </Badge>
-                          {document.blockchainVerified && (
-                            <Badge variant="outline" className="text-green-600">
-                              <Shield className="h-3 w-3 mr-1" />
-                              Verified
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {document.views} views • {document.downloads}{" "}
-                          downloads
-                        </p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedDocumentId(document.id)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Share2 className="h-4 w-4" />
-                        </Button>
+                      <div className="text-xs text-muted-foreground">
+                        {doc.type}
                       </div>
                     </div>
                   </div>
-                );
-              })
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xs text-muted-foreground">
+                      {doc.uploadDate}
+                    </span>
+                    <Badge variant={doc.isSecure ? "default" : "secondary"}>
+                      {doc.isSecure ? "Secure" : "Shared"}
+                    </Badge>
+                  </div>
+                </div>
+              ))
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No recent documents</p>
+              <div className="text-muted-foreground text-center py-8">
+                No recent documents found
               </div>
             )}
           </div>

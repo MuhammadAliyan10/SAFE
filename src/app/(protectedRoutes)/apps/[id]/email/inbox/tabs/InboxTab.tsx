@@ -31,6 +31,14 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { useParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 interface Email {
   id: string;
@@ -67,8 +75,9 @@ const InboxTab: React.FC<InboxTabProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
-  const [isMobileDetailView, setIsMobileDetailView] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const emailsPerPage = 25;
+  const [isFetchingNew, setIsFetchingNew] = useState(false);
 
   const { data: emailInsights, isLoading } = useQuery<EmailInsights>({
     queryKey: ["emailInsights", userId, projectId],
@@ -116,14 +125,35 @@ const InboxTab: React.FC<InboxTabProps> = ({
     }
   };
 
-  const handleEmailClick = (emailId: string) => {
-    setSelectedEmailId(selectedEmailId === emailId ? null : emailId);
-    setIsMobileDetailView(true);
+  const handleGetNewEmails = async () => {
+    setIsFetchingNew(true);
+    try {
+      if (!userId || !projectId) {
+        throw new Error("Missing userId or projectId");
+      }
+      await queryClient.invalidateQueries({
+        queryKey: ["emailInsights", userId, projectId],
+      });
+      await queryClient.fetchQuery({
+        queryKey: ["emailInsights", userId, projectId],
+        queryFn: () => fetchGmailEmails(userId, projectId, true),
+      });
+      toast.success("Fetched the latest emails!");
+    } catch {
+      toast.error("Failed to fetch new emails.");
+    } finally {
+      setIsFetchingNew(false);
+    }
   };
 
-  const handleBackToList = () => {
+  const handleEmailClick = (emailId: string) => {
+    setSelectedEmailId(emailId);
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
     setSelectedEmailId(null);
-    setIsMobileDetailView(false);
   };
 
   const handleAction = async (action: string, emailId: string) => {
@@ -158,7 +188,6 @@ const InboxTab: React.FC<InboxTabProps> = ({
       direction === "next" ? prev + 1 : Math.max(1, prev - 1)
     );
     setSelectedEmailId(null);
-    setIsMobileDetailView(false);
   };
 
   if (!userId || !projectId) {
@@ -180,17 +209,53 @@ const InboxTab: React.FC<InboxTabProps> = ({
   }
 
   if (isLoading && !emailInsights) {
+    // Modern skeleton loader for inbox, 100% responsive, no fixed width
     return (
-      <div className="flex min-h-[50vh] w-full items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <div>
-            <h3 className="text-lg font-semibold">Loading Your Inbox</h3>
-            <p className="text-sm text-muted-foreground">
-              Fetching your emails...
-            </p>
-          </div>
-        </div>
+      <div className="flex min-h-[50vh] w-full items-center justify-center p-2">
+        <Card className="w-full shadow-xl bg-card/80 backdrop-blur border border-slate-200 dark:border-slate-800 flex flex-col">
+          <CardHeader className="flex-shrink-0 border-b bg-card/60 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse aspect-square" />
+                <div className="flex flex-col gap-2">
+                  <div className="h-6 rounded bg-slate-200 dark:bg-slate-800 animate-pulse w-32 max-w-full" />
+                  <div className="h-4 rounded bg-slate-100 dark:bg-slate-700 animate-pulse w-24 max-w-full" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 w-full max-w-full">
+                <div className="h-10 rounded bg-slate-100 dark:bg-slate-700 animate-pulse flex-1" />
+                <div className="h-10 rounded bg-slate-200 dark:bg-slate-800 animate-pulse w-20" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="flex flex-col sm:flex-row flex-1 overflow-hidden p-0 gap-4">
+            {/* Skeleton for Email List */}
+            <div className="flex-1 border-r p-2 flex flex-col gap-2 min-w-0">
+              {[...Array(8)].map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse w-full"
+                >
+                  <div className="h-4 w-4 rounded bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-4 w-4 rounded bg-slate-200 dark:bg-slate-700" />
+                  <div className="flex-1 flex flex-col gap-1 min-w-0">
+                    <div className="h-4 rounded bg-slate-200 dark:bg-slate-700 w-32 max-w-full" />
+                    <div className="h-3 rounded bg-slate-100 dark:bg-slate-800 w-48 max-w-full" />
+                    <div className="h-3 rounded bg-slate-100 dark:bg-slate-800 w-24 max-w-full" />
+                  </div>
+                  <div className="h-3 w-12 rounded bg-slate-200 dark:bg-slate-700" />
+                </div>
+              ))}
+            </div>
+            {/* Skeleton for Email Detail (desktop) */}
+            <div className="hidden sm:flex flex-1 flex-col p-2 gap-2 min-w-0">
+              <div className="h-8 rounded bg-slate-200 dark:bg-slate-800 mb-2 animate-pulse w-3/4 max-w-full" />
+              <div className="h-4 rounded bg-slate-100 dark:bg-slate-700 mb-1 animate-pulse w-1/2 max-w-full" />
+              <div className="h-4 rounded bg-slate-100 dark:bg-slate-700 mb-2 animate-pulse w-1/3 max-w-full" />
+              <div className="flex-1 rounded bg-slate-100 dark:bg-slate-800 animate-pulse w-full" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -251,82 +316,63 @@ const InboxTab: React.FC<InboxTabProps> = ({
                 <RefreshCw className="h-4 w-4" />
                 <span className="hidden sm:inline">Refresh</span>
               </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleGetNewEmails}
+                className="gap-2 font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow"
+                disabled={isFetchingNew}
+              >
+                {isFetchingNew ? (
+                  <span className="flex items-center">
+                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                    Fetching…
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Get New Emails
+                  </span>
+                )}
+              </Button>
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="flex flex-1 overflow-hidden p-0">
-          {/* Mobile: Show either list or detail */}
-          <div className="flex w-full lg:hidden">
-            {!isMobileDetailView ? (
-              <EmailList
-                emails={paginatedEmails}
-                selectedEmails={selectedEmails}
-                selectedEmailId={selectedEmailId}
-                onEmailClick={handleEmailClick}
-                onSelectEmail={handleSelectEmail}
-                onSelectAll={handleSelectAll}
-                onAction={handleAction}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                totalEmails={emails.length}
-              />
-            ) : (
-              <EmailDetail
-                email={selectedEmail}
-                emailBody={emailBody}
-                isLoadingEmailBody={isLoadingEmailBody}
-                onAction={handleAction}
-                onBack={handleBackToList}
-                showBackButton={true}
-              />
-            )}
+          {/* Responsive Email List */}
+          <div className="w-full">
+            <EmailList
+              emails={paginatedEmails}
+              selectedEmails={selectedEmails}
+              selectedEmailId={selectedEmailId}
+              onEmailClick={handleEmailClick}
+              onSelectEmail={handleSelectEmail}
+              onSelectAll={handleSelectAll}
+              onAction={handleAction}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalEmails={emails.length}
+            />
           </div>
-
-          {/* Desktop: Show both list and detail side by side */}
-          <div className="hidden w-full lg:flex">
-            <div className="w-1/2 border-r">
-              <EmailList
-                emails={paginatedEmails}
-                selectedEmails={selectedEmails}
-                selectedEmailId={selectedEmailId}
-                onEmailClick={handleEmailClick}
-                onSelectEmail={handleSelectEmail}
-                onSelectAll={handleSelectAll}
-                onAction={handleAction}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                totalEmails={emails.length}
-              />
-            </div>
-            <div className="w-1/2">
-              {selectedEmailId ? (
+          {/* Email Detail Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent
+              className="bg-card shadow-2xl border-0 p-0 sm:p-0 max-h-[100dvh] overflow-y-auto flex flex-col"
+              style={{ width: "100%", padding: 0 }}
+            >
+              {selectedEmailId && (
                 <EmailDetail
                   email={selectedEmail}
                   emailBody={emailBody}
                   isLoadingEmailBody={isLoadingEmailBody}
                   onAction={handleAction}
-                  showBackButton={false}
+                  onBack={handleDialogClose}
                 />
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <div className="text-center space-y-3">
-                    <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                      <Mail className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Select an email</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Choose an email from the list to view its contents
-                      </p>
-                    </div>
-                  </div>
-                </div>
               )}
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </div>
@@ -577,7 +623,6 @@ interface EmailDetailProps {
   isLoadingEmailBody: boolean;
   onAction: (action: string, emailId: string) => void;
   onBack?: () => void;
-  showBackButton: boolean;
 }
 
 const EmailDetail: React.FC<EmailDetailProps> = ({
@@ -585,8 +630,6 @@ const EmailDetail: React.FC<EmailDetailProps> = ({
   emailBody,
   isLoadingEmailBody,
   onAction,
-  onBack,
-  showBackButton,
 }) => {
   if (!email) return null;
 
@@ -595,32 +638,19 @@ const EmailDetail: React.FC<EmailDetailProps> = ({
       {/* Header */}
       <div className="flex-shrink-0 border-b bg-card p-4">
         <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            {showBackButton && onBack && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onBack}
-                className="lg:hidden"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            )}
-            <div className="min-w-0 flex-1">
-              <h3 className="text-lg font-semibold leading-tight">
-                {email.subject || "(No subject)"}
-              </h3>
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <span>From: {email.from}</span>
-                <Separator orientation="vertical" className="h-3" />
-                <span>To: {email.to}</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {new Date(email.date).toLocaleString()}
-              </p>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-semibold leading-tight">
+              {email.subject || "(No subject)"}
+            </h3>
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <span>From: {email.from}</span>
+              <Separator orientation="vertical" className="h-3" />
+              <span>To: {email.to}</span>
             </div>
+            <p className="text-xs text-muted-foreground">
+              {new Date(email.date).toLocaleString()}
+            </p>
           </div>
-
           <div className="flex space-x-1">
             <Button
               variant="ghost"
@@ -649,7 +679,6 @@ const EmailDetail: React.FC<EmailDetailProps> = ({
           </div>
         </div>
       </div>
-
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {isLoadingEmailBody ? (

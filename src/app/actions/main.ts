@@ -6,6 +6,8 @@ import {
   PaymentStatus,
   ThreatType,
 } from "@prisma/client";
+import { redis } from "@/lib/redis";
+import { z } from "zod";
 
 interface Project {
   id: string;
@@ -163,6 +165,50 @@ interface RecentActivity {
   icon: string;
 }
 
+const DASHBOARD_CACHE_TTL = 60 * 60 * 4; // 4 hours in seconds
+
+const DashboardInputSchema = z.object({
+  userId: z.string(),
+  projectId: z.string(),
+  forceRefresh: z.boolean().optional().default(false),
+});
+
+export type DashboardMVPData = {
+  overview: any;
+  invoices: any;
+  expenses: any;
+  documents: any;
+};
+
+export async function fetchDashboardMVPData(
+  input: z.infer<typeof DashboardInputSchema>
+): Promise<DashboardMVPData> {
+  const { userId, projectId, forceRefresh } = DashboardInputSchema.parse(input);
+  const cacheKey = `dashboard:${userId}:${projectId}`;
+
+  if (!forceRefresh) {
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        // If cache is corrupted, ignore and refetch
+      }
+    }
+  }
+
+  // Fetch all dashboard data in parallel using real dynamic data
+  const overview = await fetchOverviewData(userId, projectId);
+  // For MVP, invoices, expenses, and documents can be extracted from overview
+  const invoices = overview.invoiceMetrics;
+  const expenses = overview.expenseMetrics;
+  const documents = overview.documentMetrics;
+
+  const data: DashboardMVPData = { overview, invoices, expenses, documents };
+  await redis.set(cacheKey, JSON.stringify(data), "EX", DASHBOARD_CACHE_TTL);
+  return data;
+}
+
 export async function fetchProjectInformation(
   projectId: string
 ): Promise<Project> {
@@ -269,10 +315,12 @@ export async function fetchOverviewData(
       pendingInvoices: invoices.filter((inv) => inv.status === "SENT").length,
       overdueInvoices: invoices.filter((inv) => inv.status === "OVERDUE")
         .length,
-      currencyBreakdown: invoices.reduce((acc, inv) => {
-        acc[inv.currency] = (acc[inv.currency] || 0) + inv.amount;
-        return acc;
-      }, {} as Record<string, number>),
+      currencyBreakdown: Object.entries(
+        invoices.reduce((acc, inv) => {
+          acc[inv.currency] = (acc[inv.currency] || 0) + inv.amount;
+          return acc;
+        }, {} as Record<string, number>)
+      ).map(([currency, amount]) => ({ currency, amount: Number(amount) })),
       recentInvoices: invoices.slice(0, 5).map((inv) => ({
         id: inv.id,
         invoiceNumber: inv.invoiceNumber,
@@ -321,15 +369,19 @@ export async function fetchOverviewData(
     const expenseMetrics: ExpenseMetrics = {
       totalExpenses: expenses.length,
       totalAmount: expenses.reduce((sum, exp) => sum + exp.amount, 0),
-      categoryBreakdown: expenses.reduce((acc, exp) => {
-        acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
-        return acc;
-      }, {} as Record<string, number>),
-      monthlyExpenses: expenses.reduce((acc, exp) => {
-        const month = exp.createdAt.toISOString().slice(0, 7);
-        acc[month] = (acc[month] || 0) + exp.amount;
-        return acc;
-      }, {} as Record<string, number>),
+      categoryBreakdown: Object.entries(
+        expenses.reduce((acc, exp) => {
+          acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+          return acc;
+        }, {} as Record<string, number>)
+      ).map(([category, amount]) => ({ category, amount: Number(amount) })),
+      monthlyExpenses: Object.entries(
+        expenses.reduce((acc, exp) => {
+          const month = exp.createdAt.toISOString().slice(0, 7);
+          acc[month] = (acc[month] || 0) + exp.amount;
+          return acc;
+        }, {} as Record<string, number>)
+      ).map(([month, amount]) => ({ month, amount: Number(amount) })),
       recentExpenses: expenses.slice(0, 5).map((exp) => ({
         id: exp.id,
         category: exp.category,
@@ -351,10 +403,12 @@ export async function fetchOverviewData(
       totalAmount: taxes.reduce((sum, tax) => sum + tax.amount, 0),
       upcomingDue: taxes.filter((tax) => tax.dueDate > new Date()).length,
       fbrTaxes: taxes.filter((tax) => tax.type === "FBR").length,
-      taxBreakdown: taxes.reduce((acc, tax) => {
-        acc[tax.type] = (acc[tax.type] || 0) + tax.amount;
-        return acc;
-      }, {} as Record<string, number>),
+      taxBreakdown: Object.entries(
+        taxes.reduce((acc, tax) => {
+          acc[tax.type] = (acc[tax.type] || 0) + tax.amount;
+          return acc;
+        }, {} as Record<string, number>)
+      ).map(([type, amount]) => ({ type, amount: Number(amount) })),
       recentTaxes: taxes.slice(0, 5).map((tax) => ({
         id: tax.id,
         type: tax.type,
@@ -374,10 +428,12 @@ export async function fetchOverviewData(
       totalDocuments: documents.length,
       secureDocuments: documents.filter((doc) => doc.permissions).length,
       sharedDocuments: documents.filter((doc) => !doc.permissions).length,
-      typeBreakdown: documents.reduce((acc, doc) => {
-        acc[doc.type] = (acc[doc.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
+      typeBreakdown: Object.entries(
+        documents.reduce((acc, doc) => {
+          acc[doc.type] = (acc[doc.type] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      ).map(([type, count]) => ({ type, count: Number(count) })),
       recentDocuments: documents.slice(0, 5).map((doc) => ({
         id: doc.id,
         type: doc.type,
@@ -402,11 +458,13 @@ export async function fetchOverviewData(
       totalAmount: payments
         .filter((p) => p.status === "SUCCESS")
         .reduce((sum, p) => sum + p.amount, 0),
-      methodBreakdown: payments.reduce((acc, payment) => {
-        const method = payment.paymentMethod?.type || "Unknown";
-        acc[method] = (acc[method] || 0) + payment.amount;
-        return acc;
-      }, {} as Record<string, number>),
+      methodBreakdown: Object.entries(
+        payments.reduce((acc, payment) => {
+          const method = payment.paymentMethod?.type || "Unknown";
+          acc[method] = (acc[method] || 0) + payment.amount;
+          return acc;
+        }, {} as Record<string, number>)
+      ).map(([method, amount]) => ({ method, amount: Number(amount) })),
       recentPayments: payments.slice(0, 5).map((payment) => ({
         id: payment.id,
         amount: payment.amount,

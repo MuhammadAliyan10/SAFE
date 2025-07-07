@@ -57,6 +57,13 @@ import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input"; // Import ShadCN Input for standalone use
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -265,23 +272,18 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, isSidebarExpanded }) => {
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
+  // Helper for user initials
+  const getInitial = (username?: string) => {
+    const safe = username ?? "";
+    const initial = safe.slice(0, 1);
+    return initial ? initial.toLocaleUpperCase() : "U";
+  };
+
   return (
     <header className="bg-background z-20">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
         {/* Left Section */}
         <div className="flex items-center gap-4">
-          {/* Sidebar Toggle */}
-          <button
-            onClick={onMenuToggle}
-            className="flex items-center justify-center w-8 h-8 text-primary hover:bg-secondary light:text-gray-600 light:hover:text-gray-900 light:hover:bg-gray-100 rounded-md transition-colors"
-          >
-            {isSidebarExpanded ? (
-              <ChevronLeft size={18} />
-            ) : (
-              <ChevronRight size={18} />
-            )}
-          </button>
-
           {!isMobile && (
             <div className="relative">
               <Search
@@ -300,7 +302,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, isSidebarExpanded }) => {
         {/* Right Section */}
         <div
           className={`flex items-center gap-3 ${
-            isMobile ? "justify-center w-full" : ""
+            isMobile ? "justify-end w-full" : ""
           }`}
         >
           {/* Mobile Search */}
@@ -338,7 +340,10 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, isSidebarExpanded }) => {
 
             {/* Notifications Dropdown */}
             {isNotificationMenuOpen && (
-              <div className="absolute right-0 top-10 w-80 bg-card border border-border rounded-lg shadow-lg z-50">
+              <div
+                className="fixed md:absolute right-2 md:right-0 top-16 md:top-10 w-[95vw] max-w-xs md:w-80 bg-card border border-border rounded-lg shadow-lg z-50"
+                style={{ maxWidth: isMobile ? "95vw" : "20rem" }}
+              >
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-primary light:text-gray-900">
@@ -398,66 +403,67 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle, isSidebarExpanded }) => {
 
           {/* Profile Menu (Hidden on Mobile) */}
           {!isMobile && (
-            <div className="relative profile-menu">
-              <button
-                onClick={toggleProfileMenu}
-                className="flex items-center gap-2 p-1 light:hover:bg-gray-100 rounded-md cursor-pointer transition-colors"
-                aria-label="Profile menu"
-              >
-                <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">
-                    {user?.username?.slice(0, 1).toLocaleUpperCase() || "U"}
-                  </span>
-                </div>
-                <ChevronDown size={14} className="text-gray-500" />
-              </button>
-
-              {/* Profile Dropdown */}
-              {isProfileMenuOpen && (
-                <div className="absolute right-0 top-10 w-64 bg-card border border-border rounded-lg shadow-lg z-50">
-                  <div className="p-4 border-b border-border">
-                    <div className="flex items-center gap-2">
-                      <div className="w-[40px] h-[40px] p-3 bg-card rounded-full border-border border flex items-center justify-center">
-                        <span className="text-primary font-medium">
-                          {user?.username?.slice(0, 1).toLocaleUpperCase() ||
-                            "U"}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-primary">
-                          {user?.username || "Unknown"}
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                          {user?.email || "No email"}
-                        </p>
-                      </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onClick={toggleProfileMenu}
+                  className="flex items-center gap-2 p-1 light:hover:bg-gray-100 rounded-md cursor-pointer transition-colors"
+                  aria-label="Profile menu"
+                >
+                  <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">
+                      {getInitial(user?.username)}
+                    </span>
+                  </div>
+                  <ChevronDown size={14} className="text-gray-500" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <div className="p-4 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <div className="w-[40px] h-[40px] p-3 bg-card rounded-full border-border border flex items-center justify-center">
+                      <span className="text-primary font-medium">
+                        {getInitial(user?.username)}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-primary">
+                        {user?.username || "Unknown"}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {user?.email || "No email"}
+                      </p>
                     </div>
                   </div>
-                  <div className="py-2">
-                    <Link href="/community/profile">
-                      <button className="flex items-center gap-3 px-4 py-2 text-sm text-primary hover:bg-secondary light:hover:bg-gray-50 w-full text-left">
-                        <UserCircle size={16} />
-                        Profile
-                      </button>
-                    </Link>
-                    <Link href="/settings">
-                      <button className="flex items-center gap-3 px-4 py-2 text-primary hover:bg-secondary light:hover:bg-gray-50 w-full text-left">
-                        <Settings size={16} />
-                        Account Settings
-                      </button>
-                    </Link>
-                    <hr className="my-2 border-border" />
-                    <button
-                      className="flex items-center gap-3 px-4 py-2 text-primary hover:bg-secondary light:hover:bg-gray-50 w-full text-left"
-                      onClick={handleLogout}
-                    >
-                      <LogOut size={14} />
-                      Sign Out
-                    </button>
-                  </div>
                 </div>
-              )}
-            </div>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/community/profile"
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-primary w-full"
+                  >
+                    <UserCircle size={16} />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/settings"
+                    className="flex items-center gap-3 px-4 py-2 text-primary w-full"
+                  >
+                    <Settings size={16} />
+                    Account Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 px-4 py-2 text-primary w-full"
+                >
+                  <LogOut size={14} />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>

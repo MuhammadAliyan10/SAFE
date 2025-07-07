@@ -63,6 +63,7 @@ import {
 } from "@/components/ui/tooltip";
 import { fetchProjects, createProject, deleteProject } from "../actions";
 import { useSession } from "@/provider/SessionProvider";
+import { toast } from "sonner";
 
 interface ProjectFormInputs {
   name: string;
@@ -166,6 +167,7 @@ export default function WelcomePage() {
       } catch (error) {
         console.error("Error loading projects:", error);
         setError("Failed to load projects");
+        toast.error("Failed to load projects");
       } finally {
         setProjectFetchLoading(false);
       }
@@ -199,6 +201,7 @@ export default function WelcomePage() {
     } catch (error: any) {
       console.error("Error creating project:", error);
       setError(error.message || "Failed to create project");
+      toast.error(error.message || "Failed to create project");
     } finally {
       setIsLoading(false);
     }
@@ -211,6 +214,7 @@ export default function WelcomePage() {
     } catch (error) {
       console.error("Error deleting project:", error);
       setError("Failed to delete project");
+      toast.error("Failed to delete project");
     }
   };
 
@@ -223,7 +227,7 @@ export default function WelcomePage() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
+      transition: { duration: 0.5 },
     },
   };
 
@@ -616,7 +620,11 @@ export default function WelcomePage() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          className="w-full p-6 text-left bg-background border-2 border-muted/20 hover:border-primary/50 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
+                          className={`w-full p-6 text-left bg-background border-2 border-muted/20 hover:border-primary/50 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group ${
+                            service.value !== "ALL_SERVICES"
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
                           onClick={() => setSelectedService(service.value)}
                           disabled={service.value !== "ALL_SERVICES"}
                         >
@@ -854,7 +862,7 @@ export default function WelcomePage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-6">
-                  {/* <Button
+                  <Button
                     type="button"
                     variant="ghost"
                     onClick={() => setIsDialogOpen(false)}
@@ -862,18 +870,7 @@ export default function WelcomePage() {
                     className="rounded-xl hover:bg-muted/50"
                   >
                     Cancel
-                  </Button> */}
-                  {selectedService && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setSelectedService(null)}
-                      disabled={isLoading || isSubmitting}
-                      className="rounded-xl border-muted/30 hover:border-primary/50"
-                    >
-                      Back
-                    </Button>
-                  )}
+                  </Button>
                   {selectedService && (
                     <Button
                       type="submit"

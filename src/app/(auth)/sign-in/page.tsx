@@ -113,7 +113,6 @@ export default function LoginPage() {
       transition: {
         duration: 0.6,
         staggerChildren: 0.1,
-        ease: "easeInOut",
       },
     },
   };
@@ -125,7 +124,6 @@ export default function LoginPage() {
       opacity: 1,
       transition: {
         duration: 0.4,
-        ease: [0.4, 0.0, 0.2, 1],
       },
     },
   };
@@ -147,9 +145,9 @@ export default function LoginPage() {
         animate="visible"
         variants={containerVariants}
       >
-        <Card className="border border-border shadow-2xl bg-gradient-to-br from-gray-900/70 via-black/50 to-gray-800/60 backdrop-blur-2xl backdrop-saturate-200 relative overflow-hidden">
-          {/* Glass effect overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-800/25 via-zinc-900/15 to-gray-900/20 pointer-events-none"></div>
+        <Card className="border border-gray-700/40 shadow-2xl bg-gradient-to-br from-black via-gray-900 to-slate-900 backdrop-blur-2xl backdrop-saturate-200 relative overflow-hidden">
+          {/* Pure black/slate glass effect overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900/60 via-black/50 to-slate-900/60 backdrop-blur-2xl pointer-events-none" />
 
           <CardHeader className="space-y-2 pb-6 relative z-10">
             <motion.div variants={itemVariants}>

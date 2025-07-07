@@ -20,6 +20,7 @@ import {
   BarChart3,
   RefreshCw,
   Settings,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
@@ -96,6 +97,26 @@ const SecurityMetricsTab: React.FC<SecurityMetricsTabProps> = ({ userId }) => {
     }
   };
 
+  // Export handler (CSV)
+  const handleExport = async () => {
+    if (!insights) return;
+    const rows = [
+      ["Metric", "Value"],
+      ["Total Emails", insights.emailCount],
+      ...insights.threatCounts.map((tc) => [`Threat: ${tc.type}`, tc.count]),
+      ...insights.emailActivity.map((ea) => [
+        `Email Activity: ${ea.date}`,
+        ea.count,
+      ]),
+      // TODO: Add invoice and document security metrics here when available
+    ];
+    const csv = rows.map((r) => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    // @ts-ignore: No types for file-saver
+    const fileSaver = await import("file-saver");
+    fileSaver.saveAs(blob, "security_metrics_export.csv");
+  };
+
   const getThreatSeverity = (type: string) => {
     const severityMap: {
       [key: string]: { color: string; icon: any; label: string };
@@ -145,21 +166,47 @@ const SecurityMetricsTab: React.FC<SecurityMetricsTabProps> = ({ userId }) => {
     insights?.threatCounts.find((t) => t.type === "SUSPICIOUS")?.count || 0;
 
   if (isLoadingInsights) {
+    // Modern skeleton loader matching the final layout
     return (
-      <div className="w-full h-full flex flex-col justify-center items-center min-h-[400px]">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-purple-200 rounded-full"></div>
-            <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-          </div>
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-primary">
-              Loading Your Security Metrics
-            </h3>
-            <p className="text-muted-foreground mt-1">
-              Analyzing your email security...
-            </p>
-          </div>
+      <div className="p-6 space-y-6 min-h-screen">
+        {/* Heading Skeleton */}
+        <div className="mb-4">
+          <div className="h-8 w-64 rounded bg-slate-200 dark:bg-slate-800 mb-2 animate-pulse" />
+          <div className="h-4 w-80 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
+        </div>
+        {/* Summary Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {[...Array(4)].map((_, idx) => (
+            <div
+              key={idx}
+              className="bg-card border-0 shadow-sm rounded-xl p-5 flex flex-col items-center animate-pulse"
+            >
+              <div className="flex items-center justify-between w-full mb-3">
+                <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-700" />
+                <div className="h-5 w-5 rounded-full bg-slate-200 dark:bg-slate-700" />
+              </div>
+              <div className="h-8 w-16 rounded bg-slate-200 dark:bg-slate-700 mb-1" />
+              <div className="h-3 w-20 rounded bg-slate-100 dark:bg-slate-800" />
+            </div>
+          ))}
+        </div>
+        {/* Main Data Sections Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, idx) => (
+            <div
+              key={idx}
+              className="bg-card border-0 shadow-sm rounded-xl p-6 flex flex-col animate-pulse"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="h-5 w-32 rounded bg-slate-200 dark:bg-slate-700 mb-2" />
+                  <div className="h-4 w-40 rounded bg-slate-100 dark:bg-slate-800" />
+                </div>
+                <div className="h-5 w-5 rounded-full bg-slate-200 dark:bg-slate-700" />
+              </div>
+              <div className="h-48 w-full rounded bg-slate-100 dark:bg-slate-800" />
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -178,22 +225,12 @@ const SecurityMetricsTab: React.FC<SecurityMetricsTabProps> = ({ userId }) => {
         </div>
         <div className="flex items-center space-x-3">
           <Button
-            onClick={handleRefresh}
-            disabled={isLoadingInsights}
+            onClick={handleExport}
             variant="default"
-            className="flex items-center space-x-2 px-4 py-2 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isLoadingInsights ? "animate-spin" : ""}`}
-            />
-            <span className="text-sm font-medium">Refresh</span>
-          </Button>
-          <Button
-            variant="secondary"
             className="flex items-center space-x-2 px-4 py-2 transition-colors"
           >
-            <Settings className="w-4 h-4" />
-            <span className="text-sm font-medium">Settings</span>
+            <Download className="w-4 h-4" />
+            <span className="text-sm font-medium">Export</span>
           </Button>
         </div>
       </div>
@@ -405,6 +442,57 @@ const SecurityMetricsTab: React.FC<SecurityMetricsTabProps> = ({ userId }) => {
           </div>
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Email Security Card (existing) */}
+        <Card className="bg-card border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-primary">
+                Email Security
+              </CardTitle>
+              <Shield className="w-5 h-5 text-purple-600" />
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {/* ...existing email security content... */}
+          </CardContent>
+        </Card>
+        {/* Invoice Security Card (placeholder) */}
+        <Card className="bg-card border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-primary">
+                Invoice Security
+              </CardTitle>
+              <Shield className="w-5 h-5 text-blue-600" />
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {/* TODO: Add invoice security metrics here */}
+            <div className="text-muted-foreground text-sm">
+              Coming soon: Invoice security metrics
+            </div>
+          </CardContent>
+        </Card>
+        {/* Document Security Card (placeholder) */}
+        <Card className="bg-card border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-primary">
+                Document Security
+              </CardTitle>
+              <Shield className="w-5 h-5 text-green-600" />
+            </div>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {/* TODO: Add document security metrics here */}
+            <div className="text-muted-foreground text-sm">
+              Coming soon: Document security metrics
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

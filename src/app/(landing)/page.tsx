@@ -338,35 +338,10 @@ export default function Home() {
               <Button size="sm">
                 <Link href="/sign-up">Sign Up</Link>
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                aria-label="Toggle theme"
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </Button>
             </div>
           </div>
 
           <div className="flex items-center gap-2 md:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </Button>
-
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -441,41 +416,60 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 dark:from-primary/10 dark:to-secondary/10" />
-
-          <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <section className="relative overflow-hidden min-h-[80vh] flex items-center bg-gradient-to-br from-black via-gray-900 to-slate-900 dark:from-black dark:via-gray-900 dark:to-slate-900">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[120vw] h-[60vh] bg-gradient-to-tr from-indigo-600/30 via-purple-500/20 to-blue-500/10 blur-3xl opacity-60" />
+          </div>
+          <div className="container mx-auto px-4 py-24 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               <motion.div
-                className="flex flex-col gap-6"
+                className="flex flex-col gap-8"
                 initial="hidden"
                 animate="visible"
                 variants={fadeIn}
               >
-                <Badge variant="outline" className="w-fit">
+                <Badge
+                  variant="outline"
+                  className="w-fit bg-white/10 border border-indigo-500 text-indigo-300 animate-fade-in"
+                >
                   Introducing SAFE
                 </Badge>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                  Manage Finances <span className="text-primary">Securely</span>
-                  <br />
-                  Save Time & Money
+                <h1
+                  className="text-5xl md:text-6xl font-extrabold leading-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400 bg-clip-text text-transparent animate-fade-in"
+                  style={{ animationDelay: "0.2s" }}
+                >
+                  All-in-One SaaS Finance Platform
                 </h1>
-                <p className="text-muted-foreground text-lg max-w-md">
+                <p
+                  className="text-lg text-indigo-100 max-w-lg animate-fade-in"
+                  style={{ animationDelay: "0.4s" }}
+                >
                   Streamline invoicing, expense tracking, and client management
-                  with AI-powered insights and secure integrations.
+                  with AI-powered insights and secure integrations. Built for
+                  modern freelancers and businesses.
                 </p>
-
-                <div className="flex flex-col sm:flex-row gap-3 mt-2">
-                  <Button size="lg" className="gap-2">
-                    Get Started <ArrowRight className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="lg">
+                <div
+                  className="flex flex-col sm:flex-row gap-4 mt-2 animate-fade-in"
+                  style={{ animationDelay: "0.6s" }}
+                >
+                  <Link href="/sign-up">
+                    <Button
+                      size="lg"
+                      className="gap-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform"
+                    >
+                      Get Started <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-indigo-500 text-indigo-200 hover:bg-indigo-900/20"
+                  >
                     How It Works
                   </Button>
                 </div>
-
                 <motion.div
-                  className="flex flex-wrap gap-4 mt-4"
+                  className="flex flex-wrap gap-4 mt-6"
                   variants={staggerContainer}
                   initial="hidden"
                   animate="visible"
@@ -484,27 +478,26 @@ export default function Home() {
                     <motion.div
                       key={index}
                       variants={fadeIn}
-                      className="bg-background/80 backdrop-blur-sm border rounded-lg px-4 py-2 flex items-center gap-2"
+                      className="bg-white/5 backdrop-blur-md border border-indigo-500/30 rounded-lg px-5 py-3 flex items-center gap-3 shadow-md"
                     >
-                      {stat.icon}
+                      <div className="iconBackground p-2">{stat.icon}</div>
                       <div>
-                        <p className="text-xs text-muted-foreground">
-                          {stat.label}
+                        <p className="text-xs text-indigo-300">{stat.label}</p>
+                        <p className="font-semibold text-indigo-100">
+                          {stat.value}
                         </p>
-                        <p className="font-medium">{stat.value}</p>
                       </div>
                     </motion.div>
                   ))}
                 </motion.div>
               </motion.div>
-
               <motion.div
-                className="relative"
+                className="relative animate-fade-in"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
               >
-                <div className="aspect-square md:aspect-[4/3] bg-gradient-to-br from-primary/30 to-secondary/30 rounded-2xl overflow-hidden flex items-center justify-center relative">
+                <div className="aspect-square md:aspect-[4/3] bg-gradient-to-br from-indigo-900/60 via-purple-900/40 to-blue-900/30 rounded-3xl overflow-hidden flex items-center justify-center relative shadow-2xl border border-indigo-700/30 backdrop-blur-xl">
                   <img
                     src="/DummyDashboard.png"
                     alt="SAFE Dashboard"
@@ -515,54 +508,23 @@ export default function Home() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.5, duration: 0.5 }}
-                      className="bg-background/90 backdrop-blur-lg border rounded-xl p-4 shadow-lg max-w-xs"
+                      className="bg-white/10 backdrop-blur-lg border border-indigo-500/30 rounded-xl p-4 shadow-lg max-w-xs"
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <BarChart3 className="text-primary h-5 w-5" />
-                        <h3 className="font-medium">Cash Flow Insights</h3>
+                        <BarChart3 className="text-indigo-400 h-5 w-5" />
+                        <h3 className="font-medium text-indigo-100">
+                          Cash Flow Insights
+                        </h3>
                       </div>
                       <div className="relative">
                         <Input
                           type="text"
                           placeholder="Filter by period..."
-                          className="pr-10"
+                          className="pr-10 bg-indigo-950/30 text-indigo-100 border-indigo-700/30"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </motion.div>
-
-                    <motion.div
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.8, duration: 0.5 }}
-                      className="w-full max-w-xs bg-background/90 backdrop-blur-lg rounded-xl border shadow-lg overflow-hidden"
-                    >
-                      <div className="p-4">
-                        <div className="flex items-start gap-3">
-                          <Avatar>
-                            <AvatarImage
-                              src="/Home/UserAvatar.jpg"
-                              alt="Profile"
-                            />
-                            <AvatarFallback>JD</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <h3 className="font-medium">Unpaid Invoice</h3>
-                            <p className="text-sm text-muted-foreground">
-                              Due tomorrow
-                            </p>
-                          </div>
-                          <Badge className="ml-auto">Email</Badge>
-                        </div>
-                      </div>
-                      <div className="h-24 bg-accent flex items-center justify-center">
-                        <img
-                          src="Invoice.jpg"
-                          alt="Invoice"
-                          className="w-full h-full object-cover"
-                        />
+                        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400" />
                       </div>
                     </motion.div>
                   </div>
@@ -1095,9 +1057,14 @@ export default function Home() {
                     tracking, and client management with AI-driven insights.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Button size="lg" className="gap-2">
-                      Create Account <ArrowRight className="h-4 w-4" />
-                    </Button>
+                    <Link href="/sign-up">
+                      <Button
+                        size="lg"
+                        className="gap-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-105 transition-transform"
+                      >
+                        Get Started <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
                     <Button variant="outline" size="lg">
                       Learn More
                     </Button>
@@ -1160,6 +1127,253 @@ export default function Home() {
             </div>
           </div>
         </motion.section>
+
+        {/* How It Works Section */}
+        <section className="py-20 bg-gradient-to-b from-black via-gray-900 to-slate-900 border-t border-indigo-900/30">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-4 animate-fade-in">
+                How It Works
+              </h2>
+              <p className="text-indigo-200 text-lg max-w-2xl mx-auto animate-fade-in">
+                Get started in just a few steps. SAFE makes financial management
+                effortless for freelancers and businesses.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              {[
+                {
+                  icon: <Users className="h-8 w-8 text-indigo-400" />,
+                  title: "Sign Up",
+                  desc: "Create your free account in seconds.",
+                },
+                {
+                  icon: <Upload className="h-8 w-8 text-indigo-400" />,
+                  title: "Connect",
+                  desc: "Link your bank, payment, and email accounts securely.",
+                },
+                {
+                  icon: <FileText className="h-8 w-8 text-indigo-400" />,
+                  title: "Automate",
+                  desc: "Send invoices, track expenses, and get AI insights.",
+                },
+                {
+                  icon: <BarChart3 className="h-8 w-8 text-indigo-400" />,
+                  title: "Grow",
+                  desc: "Optimize cash flow and scale your business.",
+                },
+              ].map((step, i) => (
+                <motion.div
+                  key={i}
+                  className="bg-white/5 backdrop-blur-md border border-indigo-500/20 rounded-2xl p-8 flex flex-col items-center text-center shadow-lg animate-fade-in"
+                  style={{ animationDelay: `${0.1 * i}s` }}
+                >
+                  <div className="iconBackground mb-4 p-4">{step.icon}</div>
+                  <h3 className="text-xl font-semibold text-indigo-100 mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="text-indigo-300">{step.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section className="py-20 bg-gradient-to-b from-black via-gray-900 to-slate-900 border-t border-indigo-900/30">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-4 animate-fade-in">
+                Simple, Transparent Pricing
+              </h2>
+              <p className="text-indigo-200 text-lg max-w-2xl mx-auto animate-fade-in">
+                Choose the plan that fits your business. No hidden fees, cancel
+                anytime.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                {
+                  name: "Starter",
+                  price: "Free",
+                  features: [
+                    "Unlimited Invoices",
+                    "Expense Tracking",
+                    "Basic AI Insights",
+                    "Email Support",
+                  ],
+                  cta: "Get Started",
+                  highlight: false,
+                },
+                {
+                  name: "Pro",
+                  price: "$12/mo",
+                  features: [
+                    "Everything in Starter",
+                    "Advanced AI Analytics",
+                    "Multi-Currency",
+                    "Priority Support",
+                    "Integrations",
+                  ],
+                  cta: "Start Pro",
+                  highlight: true,
+                },
+                {
+                  name: "Enterprise",
+                  price: "Contact Us",
+                  features: [
+                    "Custom Integrations",
+                    "Dedicated Manager",
+                    "Onboarding",
+                    "API Access",
+                  ],
+                  cta: "Contact Sales",
+                  highlight: false,
+                },
+              ].map((plan, i) => (
+                <motion.div
+                  key={i}
+                  className={`relative bg-white/5 backdrop-blur-md border ${
+                    plan.highlight
+                      ? "border-indigo-500 shadow-2xl scale-105 z-10"
+                      : "border-indigo-500/20 shadow-lg"
+                  } rounded-2xl p-8 flex flex-col items-center text-center animate-fade-in`}
+                  style={{ animationDelay: `${0.1 * i}s` }}
+                >
+                  {plan.highlight && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white text-xs px-4 py-1 rounded-full shadow-lg">
+                      Most Popular
+                    </div>
+                  )}
+                  <h3 className="text-2xl font-bold text-indigo-100 mb-2">
+                    {plan.name}
+                  </h3>
+                  <div className="text-4xl font-extrabold text-indigo-300 mb-4">
+                    {plan.price}
+                  </div>
+                  <ul className="text-indigo-200 mb-6 space-y-2">
+                    {plan.features.map((f, j) => (
+                      <li key={j} className="flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-green-400" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href="/sign-up">
+                    <Button
+                      size="lg"
+                      className={`w-full ${
+                        plan.highlight
+                          ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white"
+                          : "bg-indigo-900/40 text-indigo-200 border border-indigo-500/30"
+                      }`}
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Integrations Section */}
+        <section className="py-20 bg-gradient-to-b from-black via-gray-900 to-slate-900 border-t border-indigo-900/30">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-4 animate-fade-in">
+                Works With Your Favorite Tools
+              </h2>
+              <p className="text-indigo-200 text-lg max-w-2xl mx-auto animate-fade-in">
+                SAFE integrates with leading payment, banking, and productivity
+                platforms.
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-8 items-center">
+              {[
+                { src: "/globe.svg", alt: "Stripe" },
+                { src: "/vercel.svg", alt: "PayPal" },
+                { src: "/window.svg", alt: "JazzCash" },
+                { src: "/file.svg", alt: "Easypaisa" },
+                { src: "/next.svg", alt: "Sadapay" },
+              ].map((logo, i) => (
+                <motion.div
+                  key={i}
+                  className="bg-white/5 rounded-xl p-6 shadow-lg animate-fade-in"
+                  style={{ animationDelay: `${0.1 * i}s` }}
+                >
+                  <img src={logo.src} alt={logo.alt} className="h-10 w-auto" />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-20 bg-gradient-to-b from-black via-gray-900 to-slate-900 border-t border-indigo-900/30">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400 bg-clip-text text-transparent mb-4 animate-fade-in">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-indigo-200 text-lg max-w-2xl mx-auto animate-fade-in">
+                Everything you need to know about SAFE. Can't find the answer?
+                Contact us!
+              </p>
+            </div>
+            <div className="max-w-3xl mx-auto space-y-6">
+              {[
+                {
+                  q: "Is there a free trial?",
+                  a: "Yes! The Starter plan is free forever. You can upgrade anytime.",
+                },
+                {
+                  q: "How secure is my data?",
+                  a: "We use bank-grade encryption, blockchain hashing, and comply with GDPR/FBR.",
+                },
+                {
+                  q: "Can I cancel anytime?",
+                  a: "Absolutely. There are no contracts or hidden fees.",
+                },
+                {
+                  q: "Do you support Pakistani payment methods?",
+                  a: "Yes, we support JazzCash, Easypaisa, Sadapay, and more.",
+                },
+              ].map((faq, i) => (
+                <motion.div
+                  key={i}
+                  className="bg-white/5 backdrop-blur-md border border-indigo-500/20 rounded-xl p-6 animate-fade-in"
+                  style={{ animationDelay: `${0.1 * i}s` }}
+                >
+                  <h3 className="text-lg font-semibold text-indigo-100 mb-2">
+                    {faq.q}
+                  </h3>
+                  <p className="text-indigo-300">{faq.a}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Banner Section */}
+        <section className="py-16 bg-gradient-to-r from-indigo-700 via-purple-700 to-blue-700 border-t border-indigo-900/30">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 animate-fade-in">
+              Ready to take control of your finances?
+            </h2>
+            <p className="text-indigo-100 text-lg mb-6 animate-fade-in">
+              Join SAFE today and experience the future of financial management.
+            </p>
+            <Link href="/sign-up">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white px-10 py-5 text-lg font-bold shadow-xl hover:scale-105 transition-transform animate-fade-in"
+              >
+                Get Started Free
+              </Button>
+            </Link>
+          </div>
+        </section>
       </main>
 
       <footer className="bg-muted/50 border-t pt-12 pb-6">
@@ -1326,9 +1540,11 @@ export default function Home() {
                   456 Finance Street, Karachi
                 </li>
               </ul>
-              <Button variant="outline" className="mt-4">
-                Contact Us
-              </Button>
+              <a href="mailto:support@safeplatform.com">
+                <Button variant="outline" className="mt-4">
+                  Contact Us
+                </Button>
+              </a>
             </div>
           </div>
 

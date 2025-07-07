@@ -1,7 +1,7 @@
 "use client";
 import { logout } from "@/app/(auth)/actions";
 import { fetchProjectInformation } from "@/app/actions/main";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
   BookOpen,
@@ -86,7 +86,13 @@ enum ProjectType {
 const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
   const [expandedSections, setExpandedSections] = useState<{
     [key: string]: boolean;
-  }>({});
+  }>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("sidebar_expanded_sections");
+      return stored ? JSON.parse(stored) : {};
+    }
+    return {};
+  });
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const router = useRouter();
@@ -110,60 +116,39 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
         section: "dropdown",
         children: [
           { name: "Inbox", icon: Mail, path: `/apps/${projectId}/email/inbox` },
-          {
-            name: "Automated Orders",
-            icon: FileText,
-            path: `/apps/${projectId}/email/orders`,
-          },
-          {
-            name: "Threat Detection",
-            icon: Shield,
-            path: `/apps/${projectId}/email/threats`,
-          },
-          {
-            name: "Auto-Save",
-            icon: FileText,
-            path: `/apps/${projectId}/email/autosave`,
-          },
-          {
-            name: "Settings",
-            icon: SettingsIcon,
-            path: `/apps/${projectId}/email/settings`,
-          },
+          // { name: "Automated Orders", icon: FileText, path: `/apps/${projectId}/email/orders` }, // Not MVP
+          // { name: "Threat Detection", icon: Shield, path: `/apps/${projectId}/email/threats` }, // Not MVP
+          // { name: "Auto-Save", icon: FileText, path: `/apps/${projectId}/email/autosave` }, // Not MVP
+          // { name: "Settings", icon: SettingsIcon, path: `/apps/${projectId}/email/settings` }, // Not MVP
         ],
       },
-      {
-        name: "Security",
-        icon: Shield,
-        section: "dropdown",
-        children: [
-          {
-            name: "2FA Setup",
-            icon: Lock,
-            path: `/apps/${projectId}/security/2fa`,
-          },
-          {
-            name: "Threat Alerts",
-            icon: Shield,
-            path: `/apps/${projectId}/security/threats`,
-          },
-          {
-            name: "SDKs & Code",
-            icon: Code,
-            path: `/apps/${projectId}/security/sdks`,
-          },
-          {
-            name: "Hosting Protection",
-            icon: Store,
-            path: `/apps/${projectId}/security/hosting`,
-          },
-          {
-            name: "Audit Logs",
-            icon: FileText,
-            path: `/apps/${projectId}/security/audit`,
-          },
-        ],
-      },
+      // {
+      //   name: "Security",
+      //   icon: Shield,
+      //   section: "dropdown",
+      //   children: [ ... ] // Not MVP
+      // },
+      // Documents section only if you have implemented upload/history
+      // {
+      //   name: "Documents",
+      //   icon: FileLock,
+      //   section: "dropdown",
+      //   children: [ ... ]
+      // },
+      // Invoicing section only if you have implemented it
+      // {
+      //   name: "Invoicing",
+      //   icon: FileLock,
+      //   section: "dropdown",
+      //   children: [ ... ]
+      // },
+      // Expenses section only if you have implemented it
+      // {
+      //   name: "Expenses",
+      //   icon: Receipt,
+      //   section: "dropdown",
+      //   children: [ ... ]
+      // },
       {
         name: "Settings",
         icon: SettingsIcon,
@@ -199,64 +184,27 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
             icon: FileText,
             path: `/apps/${projectId}/invoicing/history`,
           },
-          {
-            name: "Payments",
-            icon: CreditCard,
-            path: `/apps/${projectId}/invoicing/payments`,
-          },
+          // { name: "Payments", icon: CreditCard, path: `/apps/${projectId}/invoicing/payments` }, // Not MVP
         ],
       },
-      {
-        name: "Clients",
-        icon: MessageCircle,
-        section: "dropdown",
-        children: [
-          {
-            name: "Manage Clients",
-            icon: MessageCircle,
-            path: `/apps/${projectId}/clients/manage`,
-          },
-          {
-            name: "Client History",
-            icon: FileText,
-            path: `/apps/${projectId}/clients/history`,
-          },
-        ],
-      },
-      {
-        name: "Expenses",
-        icon: Receipt,
-        section: "dropdown",
-        children: [
-          {
-            name: "Add Expense",
-            icon: Receipt,
-            path: `/apps/${projectId}/expenses/add`,
-          },
-          {
-            name: "Expense History",
-            icon: FileText,
-            path: `/apps/${projectId}/expenses/history`,
-          },
-        ],
-      },
-      {
-        name: "Taxes",
-        icon: DollarSign,
-        section: "dropdown",
-        children: [
-          {
-            name: "Tax Summary",
-            icon: DollarSign,
-            path: `/apps/${projectId}/taxes/summary`,
-          },
-          {
-            name: "Export Reports",
-            icon: FileText,
-            path: `/apps/${projectId}/taxes/export`,
-          },
-        ],
-      },
+      // {
+      //   name: "Clients",
+      //   icon: MessageCircle,
+      //   section: "dropdown",
+      //   children: [ ... ] // Not MVP
+      // },
+      // {
+      //   name: "Expenses",
+      //   icon: Receipt,
+      //   section: "dropdown",
+      //   children: [ ... ] // Not MVP
+      // },
+      // {
+      //   name: "Taxes",
+      //   icon: DollarSign,
+      //   section: "dropdown",
+      //   children: [ ... ] // Not MVP
+      // },
       {
         name: "Settings",
         icon: SettingsIcon,
@@ -288,15 +236,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
             path: `/apps/${projectId}/documents/upload`,
           },
           {
-            name: "Share Securely",
-            icon: FileText,
-            path: `/apps/${projectId}/documents/share`,
-          },
-          {
             name: "Document History",
             icon: FileText,
             path: `/apps/${projectId}/documents/history`,
           },
+          // { name: "Share Securely", icon: FileText, path: `/apps/${projectId}/documents/share` }, // Not MVP
         ],
       },
       {
@@ -325,58 +269,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
         section: "dropdown",
         children: [
           { name: "Inbox", icon: Mail, path: `/apps/${projectId}/email/inbox` },
-          {
-            name: "Automated Orders",
-            icon: FileText,
-            path: `/apps/${projectId}/email/orders`,
-          },
-          {
-            name: "Threat Detection",
-            icon: Shield,
-            path: `/apps/${projectId}/email/threats`,
-          },
-          {
-            name: "Auto-Save",
-            icon: FileText,
-            path: `/apps/${projectId}/email/autosave`,
-          },
-          {
-            name: "Settings",
-            icon: SettingsIcon,
-            path: `/apps/${projectId}/email/settings`,
-          },
-        ],
-      },
-      {
-        name: "Security",
-        icon: Shield,
-        section: "dropdown",
-        children: [
-          {
-            name: "2FA Setup",
-            icon: Lock,
-            path: `/apps/${projectId}/security/2fa`,
-          },
-          {
-            name: "Threat Alerts",
-            icon: Shield,
-            path: `/apps/${projectId}/security/threats`,
-          },
-          {
-            name: "SDKs & Code",
-            icon: Code,
-            path: `/apps/${projectId}/security/sdks`,
-          },
-          {
-            name: "Hosting Protection",
-            icon: Store,
-            path: `/apps/${projectId}/security/hosting`,
-          },
-          {
-            name: "Audit Logs",
-            icon: FileText,
-            path: `/apps/${projectId}/security/audit`,
-          },
+          // { name: "Automated Orders", icon: FileText, path: `/apps/${projectId}/email/orders` }, // Not MVP
+          // { name: "Threat Detection", icon: Shield, path: `/apps/${projectId}/email/threats` }, // Not MVP
+          // { name: "Auto-Save", icon: FileText, path: `/apps/${projectId}/email/autosave` }, // Not MVP
+          // { name: "Settings", icon: SettingsIcon, path: `/apps/${projectId}/email/settings` }, // Not MVP
         ],
       },
       {
@@ -390,15 +286,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
             path: `/apps/${projectId}/documents/upload`,
           },
           {
-            name: "Share Securely",
-            icon: FileText,
-            path: `/apps/${projectId}/documents/share`,
-          },
-          {
             name: "Document History",
             icon: FileText,
             path: `/apps/${projectId}/documents/history`,
           },
+          // { name: "Share Securely", icon: FileText, path: `/apps/${projectId}/documents/share` }, // Not MVP
         ],
       },
       {
@@ -416,93 +308,45 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
             icon: FileText,
             path: `/apps/${projectId}/invoicing/history`,
           },
-          {
-            name: "Payments",
-            icon: CreditCard,
-            path: `/apps/${projectId}/invoicing/payments`,
-          },
+          // { name: "Payments", icon: CreditCard, path: `/apps/${projectId}/invoicing/payments` }, // Not MVP
         ],
       },
-      {
-        name: "Clients",
-        icon: MessageCircle,
-        section: "dropdown",
-        children: [
-          {
-            name: "Manage Clients",
-            icon: MessageCircle,
-            path: `/apps/${projectId}/clients/manage`,
-          },
-          {
-            name: "Client History",
-            icon: FileText,
-            path: `/apps/${projectId}/clients/history`,
-          },
-        ],
-      },
-      {
-        name: "Expenses",
-        icon: Receipt,
-        section: "dropdown",
-        children: [
-          {
-            name: "Add Expense",
-            icon: Receipt,
-            path: `/apps/${projectId}/expenses/add`,
-          },
-          {
-            name: "Expense History",
-            icon: FileText,
-            path: `/apps/${projectId}/expenses/history`,
-          },
-        ],
-      },
-      {
-        name: "Taxes",
-        icon: DollarSign,
-        section: "dropdown",
-        children: [
-          {
-            name: "Tax Summary",
-            icon: DollarSign,
-            path: `/apps/${projectId}/taxes/summary`,
-          },
-          {
-            name: "Export Reports",
-            icon: FileText,
-            path: `/apps/${projectId}/taxes/export`,
-          },
-        ],
-      },
-      {
-        name: "Integrations",
-        icon: Key,
-        section: "dropdown",
-        children: [
-          {
-            name: "Payment Methods",
-            icon: CreditCard,
-            path: `/apps/${projectId}/integrations/payments`,
-          },
-          {
-            name: "Storefronts",
-            icon: Store,
-            path: `/apps/${projectId}/integrations/storefronts`,
-          },
-        ],
-      },
-      {
-        name: "Subscriptions",
-        icon: CreditCard,
-        section: null,
-        path: `/apps/${projectId}/subscriptions`,
-      },
-      {
-        name: "Calendar",
-        icon: Calendar,
-        section: null,
-        path: `/apps/${projectId}/calendar`,
-      },
+      // {
+      //   name: "Clients",
+      //   icon: MessageCircle,
+      //   section: "dropdown",
+      //   children: [ ... ] // Not MVP
+      // },
+      // {
+      //   name: "Expenses",
+      //   icon: Receipt,
+      //   section: "dropdown",
+      //   children: [ ... ] // Not MVP
+      // },
+      // {
+      //   name: "Taxes",
+      //   icon: DollarSign,
+      //   section: "dropdown",
+      //   children: [ ... ] // Not MVP
+      // },
+      // {
+      //   name: "Integrations",
+      //   icon: Key,
+      //   section: "dropdown",
+      //   children: [ ... ] // Not MVP
+      // },
+      // {
+      //   name: "Subscriptions",
+      //   icon: CreditCard,
+      //   section: null,
+      //   path: `/apps/${projectId}/subscriptions`, // Not MVP
+      // },
+      // {
+      //   name: "Calendar",
+      //   icon: Calendar,
+      //   section: null,
+      //   path: `/apps/${projectId}/calendar`, // Not MVP
+      // },
       {
         name: "Settings",
         icon: SettingsIcon,
@@ -547,6 +391,42 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
     };
     fetchProjectDetails();
   }, [projectId]);
+
+  useEffect(() => {
+    // Restore expanded sections from localStorage
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("sidebar_expanded_sections");
+      if (stored) setExpandedSections(JSON.parse(stored));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Persist expanded sections to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "sidebar_expanded_sections",
+        JSON.stringify(expandedSections)
+      );
+    }
+  }, [expandedSections]);
+
+  useEffect(() => {
+    // Auto-expand parent section if current route is a child nav
+    if (projectDetails) {
+      const navItems =
+        navItemsByService[projectDetails.service as ProjectType] ||
+        navItemsByService[ProjectType.ALL_SERVICES];
+      navItems.forEach((item) => {
+        if (item.children) {
+          item.children.forEach((child) => {
+            if (child.path === pathname) {
+              setExpandedSections((prev) => ({ ...prev, [item.name]: true }));
+            }
+          });
+        }
+      });
+    }
+  }, [projectDetails, pathname]);
 
   const handleToggleSidebar = () => {
     if (isMobile) {
@@ -631,11 +511,33 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
             </>
           )}
         </button>
-        {hasChildren && (isExpanded || isMobile) && isSectionExpanded && (
-          <div className="py-1">
-            {item.children?.map((child) => renderNavItem(child, true))}
-          </div>
-        )}
+        <AnimatePresence initial={false}>
+          {hasChildren && (isExpanded || isMobile) && (
+            <motion.div
+              key={item.name + "-children"}
+              initial="collapsed"
+              animate={isSectionExpanded ? "open" : "collapsed"}
+              exit="collapsed"
+              variants={{
+                open: {
+                  height: "auto",
+                  opacity: 1,
+                  transition: { duration: 0.25, ease: "easeInOut" },
+                },
+                collapsed: {
+                  height: 0,
+                  opacity: 0,
+                  transition: { duration: 0.2, ease: "easeInOut" },
+                },
+              }}
+              style={{ overflow: "hidden" }}
+            >
+              <div className="py-1">
+                {item.children?.map((child) => renderNavItem(child, true))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   };
@@ -666,6 +568,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
               <p className="text-muted-foreground text-xs">
                 {projectId.slice(0, 20)}...
               </p>
+              {!projectDetails && isLoading === false && (
+                <span className="text-destructive text-xs">
+                  Failed to load project details
+                </span>
+              )}
             </div>
           </motion.div>
         )}
@@ -676,17 +583,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
           {(projectDetails
             ? navItemsByService[projectDetails.service as ProjectType] ||
               navItemsByService[ProjectType.ALL_SERVICES]
-            : Array(13).fill(null)
-          ).map((item, index) =>
-            item ? (
-              renderNavItem(item)
-            ) : (
-              <div
-                key={index}
-                className="h-10 rounded-lg bg-card my-2 mx-2 animate-pulse"
-              ></div>
-            )
-          )}
+            : Array(navItemsByService[ProjectType.ALL_SERVICES].length).fill(
+                null
+              )
+          ).map((item, index) => {
+            if (item && typeof item === "object" && "section" in item) {
+              return renderNavItem(item);
+            } else {
+              return (
+                <div
+                  key={index}
+                  className="h-10 rounded-lg bg-card my-2 mx-2 animate-pulse"
+                />
+              );
+            }
+          })}
         </nav>
       </div>
 
@@ -712,23 +623,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isExpanded, toggleSidebar }) => {
 
   return (
     <>
-      {isMobile && (
-        <button
-          onClick={handleToggleSidebar}
-          className="fixed top-4 left-4 z-50 md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-background shadow-sm border border-border hover:bg-background/10 transition-all duration-200"
-          aria-label="Toggle Menu"
-        >
-          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      )}
-
-      {isMobile && isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 z-40 md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
       <div
         className={`
           ${

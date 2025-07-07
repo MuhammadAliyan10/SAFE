@@ -260,53 +260,6 @@ const DashboardComponent = () => {
     );
   }
 
-  // Gmail connection required state
-  const isGmailConnected =
-    gmailIntegration?.status === 200 && gmailIntegration?.res;
-  const hasEmailData = emailData && emailData.emailCount > 0;
-
-  if (!isGmailConnected || !hasEmailData) {
-    return (
-      <div className="w-full h-full flex flex-col justify-center items-center min-h-[500px] p-8">
-        <div className="max-w-md text-center space-y-6">
-          <div className="space-y-3">
-            <Globe className="h-16 w-16 text-primary mx-auto" />
-            <h2 className="text-2xl font-bold text-primary">
-              {isGmailConnected ? "No Email Data Found" : "Connect Your Email"}
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              {isGmailConnected
-                ? "No emails were found in your Gmail account. Try refreshing to fetch new data."
-                : "Get personalized insights about your email security. We'll help you identify threats, track email patterns, and keep your communications safe."}
-            </p>
-          </div>
-          <div className="flex flex-col space-y-3">
-            <Button
-              onClick={isGmailConnected ? handleRefresh : handleGmailConnect}
-              disabled={isRefreshing}
-              className="rounded-xl flex gap-2 items-center px-4 py-2"
-            >
-              {isRefreshing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Globe className="w-4 h-4" />
-              )}
-              <span>
-                {isGmailConnected
-                  ? "Refresh Email Data"
-                  : "Connect Gmail Account"}
-              </span>
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              We use secure OAuth to connect your account. Your data is
-              encrypted and never shared.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Define tabs based on project type
   const tabsByService: { [key in ProjectType]: Tab[] } = {
     [ProjectType.BUSINESS_SECURITY]: [
@@ -381,11 +334,11 @@ const DashboardComponent = () => {
         value: "invoice-analytics",
         component: <InvoiceAnalyticsTab userId={user.id} />,
       },
-      {
-        name: "Client Insights",
-        value: "client-insights",
-        component: <ClientInsightsTab userId={user.id} />,
-      },
+      // {
+      //   name: "Client Insights",
+      //   value: "client-insights",
+      //   component: <ClientInsightsTab userId={user.id} />,
+      // },
       {
         name: "Expense Tracking",
         value: "expense-tracking",

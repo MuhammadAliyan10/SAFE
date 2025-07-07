@@ -27,6 +27,8 @@ import {
   BarChart3,
   RefreshCw,
   Settings,
+  Download,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
@@ -146,32 +148,87 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({
     setIsLoadingBody(true);
   };
 
-  if (isLoading || !cachedEmails || !cachedEmails.hasGmail) {
+  // Export handler (CSV)
+  const handleExport = async () => {
+    if (!cachedEmails) return;
+    const rows = [
+      ["Metric", "Value"],
+      ["Total Emails", cachedEmails.emailCount],
+      ["Safe Emails", safeEmails],
+      ["Threats Blocked", totalThreats],
+      [
+        "Security Score",
+        ((safeEmails / (cachedEmails.emailCount || 1)) * 100).toFixed(0) + "%",
+      ],
+      ...cachedEmails.threatCounts.map((tc) => [
+        `Threat: ${tc.type}`,
+        tc.count,
+      ]),
+      ...cachedEmails.emailActivity.map((ea) => [
+        `Email Activity: ${ea.date}`,
+        ea.count,
+      ]),
+    ];
+    const csv = rows.map((r) => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    // @ts-ignore: No types for file-saver
+    const fileSaver = await import("file-saver");
+    fileSaver.saveAs(blob, "email_insights_export.csv");
+  };
+
+  if (isLoading || !cachedEmails) {
+    // Modern skeleton loader matching the final layout
     return (
-      <div className="w-full h-full flex flex-col justify-center items-center min-h-[400px]">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-purple-200 rounded-full"></div>
-            <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-          </div>
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-primary">
-              Loading Your Email Dashboard
-            </h3>
-            <p className="text-muted-foreground mt-1">
-              Analyzing your email security...
-            </p>
-          </div>
+      <div className="p-6 space-y-6 min-h-screen">
+        {/* Heading Skeleton */}
+        <div className="mb-4">
+          <div className="h-8 w-64 rounded bg-slate-200 dark:bg-slate-800 mb-2 animate-pulse" />
+          <div className="h-4 w-80 rounded bg-slate-100 dark:bg-slate-700 animate-pulse" />
+        </div>
+        {/* Summary Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {[...Array(4)].map((_, idx) => (
+            <div
+              key={idx}
+              className="bg-card border-0 shadow-sm rounded-xl p-5 flex flex-col items-center animate-pulse"
+            >
+              <div className="flex items-center justify-between w-full mb-3">
+                <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-700" />
+                <div className="h-5 w-5 rounded-full bg-slate-200 dark:bg-slate-700" />
+              </div>
+              <div className="h-8 w-16 rounded bg-slate-200 dark:bg-slate-700 mb-1" />
+              <div className="h-3 w-20 rounded bg-slate-100 dark:bg-slate-800" />
+            </div>
+          ))}
+        </div>
+        {/* Main Data Sections Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(2)].map((_, idx) => (
+            <div
+              key={idx}
+              className="bg-card border-0 shadow-sm rounded-xl p-6 flex flex-col animate-pulse"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="h-5 w-32 rounded bg-slate-200 dark:bg-slate-700 mb-2" />
+                  <div className="h-4 w-40 rounded bg-slate-100 dark:bg-slate-800" />
+                </div>
+                <div className="h-5 w-5 rounded-full bg-slate-200 dark:bg-slate-700" />
+              </div>
+              <div className="h-48 w-full rounded bg-slate-100 dark:bg-slate-800" />
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
-  const totalThreats = cachedEmails.threatCounts.reduce(
-    (sum, threat) => sum + threat.count,
-    0
-  );
-  const safeEmails = cachedEmails.emailCount - totalThreats;
+  const totalThreats =
+    cachedEmails?.threatCounts?.reduce(
+      (sum, threat) => sum + (threat?.count || 0),
+      0
+    ) || 0;
+  const safeEmails = (cachedEmails?.emailCount || 0) - totalThreats;
 
   return (
     <div className="p-6 space-y-6 min-h-screen">
@@ -186,19 +243,12 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({
         </div>
         <div className="flex items-center space-x-3">
           <Button
-            onClick={handleRefresh}
+            onClick={handleExport}
             variant="default"
             className="flex items-center space-x-2 px-4 py-2 transition-colors"
           >
-            <RefreshCw className="w-4 h-4" />
-            <span className="text-sm font-medium">Refresh</span>
-          </Button>
-          <Button
-            variant="secondary"
-            className="flex items-center space-x-2 px-4 py-2 transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            <span className="text-sm font-medium">Settings</span>
+            <Download className="w-4 h-4" />
+            <span className="text-sm font-medium">Export</span>
           </Button>
         </div>
       </div>
@@ -214,7 +264,7 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({
           </CardHeader>
           <CardContent className="pt-0">
             <div className="text-2xl font-bold text-primary">
-              {cachedEmails.emailCount.toLocaleString()}
+              {(cachedEmails?.emailCount || 0).toLocaleString()}
             </div>
             <p className="text-sm text-purple-600 mt-1">Processed this month</p>
           </CardContent>
@@ -233,7 +283,9 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({
               {safeEmails.toLocaleString()}
             </div>
             <p className="text-sm text-green-600 mt-1">
-              {((safeEmails / (cachedEmails.emailCount || 1)) * 100).toFixed(1)}
+              {((safeEmails / (cachedEmails?.emailCount || 1)) * 100).toFixed(
+                1
+              )}
               % of total
             </p>
           </CardContent>
@@ -252,7 +304,7 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({
               {totalThreats}
             </div>
             <p className="text-sm text-red-600 mt-1">
-              {((totalThreats / (cachedEmails.emailCount || 1)) * 100).toFixed(
+              {((totalThreats / (cachedEmails?.emailCount || 1)) * 100).toFixed(
                 1
               )}
               % of total
@@ -270,7 +322,9 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({
           </CardHeader>
           <CardContent className="pt-0">
             <div className="text-2xl font-bold text-primary">
-              {((safeEmails / (cachedEmails.emailCount || 1)) * 100).toFixed(0)}
+              {((safeEmails / (cachedEmails?.emailCount || 1)) * 100).toFixed(
+                0
+              )}
               %
             </div>
             <p className="text-sm text-blue-600 mt-1">Excellent protection</p>
@@ -293,11 +347,11 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({
             </div>
           </CardHeader>
           <CardContent>
-            {cachedEmails.threatCounts.length ? (
+            {cachedEmails?.threatCounts?.length ? (
               <div className="space-y-4">
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart
-                    data={cachedEmails.threatCounts}
+                    data={cachedEmails?.threatCounts || []}
                     margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
                   >
                     <CartesianGrid
@@ -333,7 +387,10 @@ const EmailInsightsTab: React.FC<EmailInsightsTabProps> = ({
                   </BarChart>
                 </ResponsiveContainer>
                 <div className="space-y-2">
-                  {cachedEmails.threatCounts.map((threat) => {
+                  {(cachedEmails && cachedEmails.threatCounts
+                    ? cachedEmails.threatCounts
+                    : []
+                  ).map((threat) => {
                     const severity = getThreatSeverity(threat.type);
                     const Icon = severity.icon;
                     return (
